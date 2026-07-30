@@ -1,0 +1,31 @@
+:root {
+  /* Palette sampled from the Template Tokri logo */
+  --sky-1: #D7EEF6;
+  --sky-2: #5FA8CC;
+  --basket-brown: #B97A3E;
+  --basket-brown-dark: #7A4A22;
+  --cream: #F7F1E3;
+  --blush: #EFC9BC;
+  --navy: #1E2B3C;
+  --sage: #6B7A5E;
+  --gold: #C9A227;
+  --ink: #232B26;
+  --muted: #6B7770;
+  --line: #E4DFD3;
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(30, 43, 60, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: var(--ink);
+  background: var(--cream);
+}
+
+.script { font-family: 'Caveat', cursive; }
+.serif { font-family: 'Fraunces', serif; }
+
+a { color: inherit; text-decoration: none; }

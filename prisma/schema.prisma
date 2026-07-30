@@ -1,0 +1,122 @@
+// Template Tokri — Database Schema
+// Postgres via Vercel Postgres. Run `npx prisma migrate dev` locally,
+// or `npx prisma migrate deploy` in CI/production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum ProductCategory {
+  PUJA
+  WEDDING
+  BUSINESS
+  OTHER
+}
+
+enum ProductTrack {
+  A // Ready-made template, quick-edited with customer inputs, delivered in 24-48h
+  B // Fully custom design, higher price, longer turnaround
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  IN_PROGRESS   // team is editing/designing
+  DELIVERED
+  CANCELLED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  CONVERTED
+  CLOSED
+}
+
+// ---------- Models ----------
+
+// Optional account. Guest checkout never requires this —
+// an Order can exist with userId = null.
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  phone     String?  @unique
+  name      String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  description String
+  category    ProductCategory
+  regionLanguage String       // e.g. "Bengali", "Maithili", "Bhojpuri", "Hindi", "English"
+  track       ProductTrack
+  price       Int             // stored in paise-free rupees (whole rupees) for simplicity
+  images      String[]        // public Blob URLs (template-tokri-blob-public)
+  tags        String[]
+  isActive    Boolean         @default(true)
+  isSeasonal  Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  user              User?       @relation(fields: [userId], references: [id])
+  userId            String?
+  customerName      String
+  customerPhone     String
+  customerEmail     String?
+  status            OrderStatus @default(PENDING_PAYMENT)
+  totalAmount       Int
+  razorpayOrderId   String?     @unique
+  razorpayPaymentId String?     @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  items             OrderItem[]
+}
+
+// Captures the per-item quick-edit inputs for Track A products
+// (name/date/text the customer wants on the template) as agreed:
+// name + phone live on the Order; item-specific details live here.
+model OrderItem {
+  id                String   @id @default(cuid())
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId           String
+  product           Product  @relation(fields: [productId], references: [id])
+  productId         String
+  quantity          Int      @default(1)
+  unitPrice         Int
+  inputDetails      String   // free-text block: names/date/wording for this template
+  referenceImageUrl String?  // optional upload, stored in template-tokri-blob-pvt
+  deliveredFileUrl  String?  // final edited file, stored in template-tokri-blob-pvt once done
+}
+
+// Track B custom design requests — collected via the occasion-aware
+// contact form, independent of the cart/checkout flow.
+model CustomOrderLead {
+  id               String     @id @default(cuid())
+  name             String
+  phone            String
+  email            String?
+  preferredLanguage String?
+  occasion         String     // "Wedding" | "Puja" | "Business" | "Other"
+  occasionDetails  Json?      // dynamic fields depending on occasion
+  freeText         String?
+  referenceFileUrl String?
+  status           LeadStatus @default(NEW)
+  createdAt        DateTime   @default(now())
+}
