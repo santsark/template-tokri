@@ -13,7 +13,7 @@
   "dependencies": {
     "@getbrevo/brevo": "^6.0.2",
     "@prisma/client": "^6.1.0",
-    "@vercel/blob": "^2.6.1",
+    "@vercel/blob": "^1.1.0",
     "next": "^16.2.11",
     "razorpay": "^2.9.4",
     "react": "^18.3.1",

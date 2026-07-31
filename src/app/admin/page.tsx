@@ -175,6 +175,8 @@ function OrdersTab() {
   const [orders, setOrders] = useState<any[]>([]);
   const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [resending, setResending] = useState<Record<string, boolean>>({});
 
   function load() {
     fetch('/api/admin/orders').then((r) => r.json()).then(setOrders);
@@ -195,6 +197,27 @@ function OrdersTab() {
       return next;
     });
     load();
+  }
+
+  async function handleDeliverFile(orderId: string, orderItemId: string, file: File) {
+    setUploading((u) => ({ ...u, [orderItemId]: true }));
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('orderItemId', orderItemId);
+    await fetch(`/api/admin/orders/${orderId}/deliver`, { method: 'POST', body: fd });
+    setUploading((u) => ({ ...u, [orderItemId]: false }));
+    load();
+  }
+
+  async function handleResend(orderId: string, orderItemId: string) {
+    setResending((r) => ({ ...r, [orderItemId]: true }));
+    await fetch(`/api/admin/orders/${orderId}/resend-delivery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderItemId })
+    });
+    setResending((r) => ({ ...r, [orderItemId]: false }));
+    alert('Delivery email re-sent with a fresh link.');
   }
 
   return (
@@ -230,13 +253,48 @@ function OrdersTab() {
               <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{o.customerPhone} · {o.customerEmail}</div>
               <div style={{ fontSize: 13, marginTop: 6 }}>
                 {o.items.map((i: any) => (
-                  <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 6, marginTop: 6 }}>
+                  <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 8, marginTop: 8 }}>
                     <strong>{i.product.title}</strong> x{i.quantity} — ₹{i.unitPrice}
                     <div style={{ fontSize: 12, color: '#6B7770' }}>Inputs: {i.inputDetails || '—'}</div>
+
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      {i.deliveredFileUrl ? (
+                        <>
+                          <span style={{ fontSize: 12, color: '#1F5D57', background: '#E4F1EE', padding: '3px 10px', borderRadius: 999 }}>
+                            ✓ Delivered
+                          </span>
+                          <button
+                            onClick={() => handleResend(o.id, i.id)}
+                            disabled={resending[i.id]}
+                            style={btnOutline}
+                          >
+                            {resending[i.id] ? 'Sending...' : 'Resend email'}
+                          </button>
+                          <label style={{ ...btnOutline, cursor: 'pointer' }}>
+                            Replace file
+                            <input
+                              type="file"
+                              style={{ display: 'none' }}
+                              onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])}
+                            />
+                          </label>
+                        </>
+                      ) : (
+                        <label style={{ ...btnPrimary, cursor: 'pointer', display: 'inline-block' }}>
+                          {uploading[i.id] ? 'Uploading...' : 'Upload finished file'}
+                          <input
+                            type="file"
+                            style={{ display: 'none' }}
+                            disabled={uploading[i.id]}
+                            onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])}
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
-              <div style={{ fontWeight: 700, marginTop: 8 }}>Total: ₹{o.totalAmount}</div>
+              <div style={{ fontWeight: 700, marginTop: 10 }}>Total: ₹{o.totalAmount}</div>
             </div>
           );
         })}
