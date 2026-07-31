@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Incorrect password' }, { status: 401 });
   }
 
-  const cookie = sessionCookie();
+  const cookie = await sessionCookie();
   const response = NextResponse.json({ success: true });
   response.cookies.set(cookie.name, cookie.value, cookie.options);
   return response;

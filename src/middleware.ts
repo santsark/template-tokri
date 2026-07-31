@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { ADMIN_COOKIE_NAME, isValidSessionValue } from '@/lib/adminAuth';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isLoginPage = pathname === '/admin/login';
@@ -11,7 +11,8 @@ export function middleware(request: NextRequest) {
 
   if (isProtectedPage || isProtectedApi) {
     const cookie = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-    if (!isValidSessionValue(cookie)) {
+    const valid = await isValidSessionValue(cookie);
+    if (!valid) {
       if (isProtectedApi) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
