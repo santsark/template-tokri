@@ -34,6 +34,7 @@ export default function HomePage() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [pendingInputDetails, setPendingInputDetails] = useState('');
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -194,11 +195,16 @@ export default function HomePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '90%', padding: 28, maxHeight: '90vh', overflowY: 'auto' }}>
             {activeProduct.images?.[0] && (
-              <img
-                src={activeProduct.images[0]}
-                alt={activeProduct.title}
-                style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, marginBottom: 14 }}
-              />
+              <div style={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => setLightboxImage(activeProduct.images[0])}>
+                <img
+                  src={activeProduct.images[0]}
+                  alt={activeProduct.title}
+                  style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, marginBottom: 14 }}
+                />
+                <span style={{ position: 'absolute', bottom: 22, right: 10, background: 'rgba(30,43,60,0.75)', color: '#fff', fontSize: 11, padding: '4px 9px', borderRadius: 999 }}>
+                  🔍 Tap to view full image
+                </span>
+              </div>
             )}
           <h3 className="serif">{activeProduct.title}</h3>
             <p style={{ color: 'var(--muted)', fontSize: 14 }}>{activeProduct.description}</p>
@@ -231,7 +237,35 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
+      
+      {/* Image lightbox — full, uncropped view */}
+      {lightboxImage && (
+        <div
+          onClick={() => setLightboxImage(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(20,25,30,0.92)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 300, padding: 24, cursor: 'zoom-out'
+          }}
+        >
+          <img
+            src={lightboxImage}
+            alt="Full size preview"
+            style={{ maxWidth: '92vw', maxHeight: '88vh', objectFit: 'contain', borderRadius: 8 }}
+          />
+          <button
+            onClick={() => setLightboxImage(null)}
+            style={{
+              position: 'absolute', top: 20, right: 24, background: 'rgba(255,255,255,0.15)',
+              color: '#fff', border: 'none', borderRadius: '50%', width: 40, height: 40,
+              fontSize: 18, cursor: 'pointer'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      
       {/* Cart drawer */}
       {cartOpen && (
         <div style={{ position: 'fixed', top: 0, right: 0, height: '100%', width: 380, background: '#fff', boxShadow: '-8px 0 30px rgba(0,0,0,0.15)', zIndex: 210, display: 'flex', flexDirection: 'column' }}>
