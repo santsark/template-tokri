@@ -157,7 +157,16 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 24 }}>
           {products.map((p) => (
             <div key={p.id} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden' }}>
-              <div style={{ height: 160, background: p.track === 'A' ? 'linear-gradient(135deg, var(--blush), var(--gold))' : 'linear-gradient(135deg, var(--navy), var(--sage))' }} />
+              <div
+                style={{
+                  height: 160,
+                  background: p.images?.[0]
+                    ? `#eee url(${p.images[0]}) center/cover no-repeat`
+                    : p.track === 'A'
+                    ? 'linear-gradient(135deg, var(--blush), var(--gold))'
+                    : 'linear-gradient(135deg, var(--navy), var(--sage))'
+                }}
+              />
               <div style={{ padding: 18 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--basket-brown)', textTransform: 'uppercase' }}>
                   {p.track === 'A' ? 'Quick-edit · 24-48h' : 'Custom design'}
@@ -183,8 +192,15 @@ export default function HomePage() {
       {/* Product detail / input collection modal */}
       {activeProduct && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-          <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '90%', padding: 28 }}>
-            <h3 className="serif">{activeProduct.title}</h3>
+          <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '90%', padding: 28, maxHeight: '90vh', overflowY: 'auto' }}>
+            {activeProduct.images?.[0] && (
+              <img
+                src={activeProduct.images[0]}
+                alt={activeProduct.title}
+                style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, marginBottom: 14 }}
+              />
+            )}
+          <h3 className="serif">{activeProduct.title}</h3>
             <p style={{ color: 'var(--muted)', fontSize: 14 }}>{activeProduct.description}</p>
             {activeProduct.track === 'A' && (
               <>
