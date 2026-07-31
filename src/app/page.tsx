@@ -119,6 +119,10 @@ export default function HomePage() {
       <header style={{ position: 'sticky', top: 0, background: 'rgba(247,241,227,0.95)', borderBottom: '1px solid var(--line)', zIndex: 50 }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 20, padding: '12px 24px' }}>
           <span className="script" style={{ fontSize: 30, color: 'var(--navy)', fontWeight: 700 }}>Template Tokri</span>
+            <nav style={{ display: 'flex', gap: 16, fontSize: 14, fontWeight: 600 }}>
+              <a href="#catalog" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Shop</a>
+              <a href="#custom" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Custom Orders</a>
+            </nav>
           <input
             placeholder="Search templates..."
             value={search}
@@ -134,7 +138,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 1180, margin: '0 auto', padding: '40px 24px' }}>
+      <section id="catalog" style={{ maxWidth: 1180, margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
           {categories.map((c) => (
             <button
@@ -189,6 +193,8 @@ export default function HomePage() {
           {products.length === 0 && <p style={{ color: 'var(--muted)' }}>No templates found yet — add some via Prisma Studio.</p>}
         </div>
       </section>
+
+      <CustomOrderSection />
 
       {/* Product detail / input collection modal */}
       {activeProduct && (
@@ -332,5 +338,135 @@ export default function HomePage() {
         <p style={{ fontSize: 13, marginTop: 8 }}>Kolkata, West Bengal · hello@templatetokri.com</p>
       </footer>
     </div>
+  );
+}
+
+function CustomOrderSection() {
+  const [occasion, setOccasion] = useState('');
+  const [form, setForm] = useState({
+    name: '', phone: '', email: '', preferredLanguage: 'English',
+    freeText: '', wedding: { couple: '', date: '', venue: '', theme: '' },
+    puja: { community: '', dates: '' },
+    business: { businessName: '', businessCategory: '' }
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  async function handleSubmit() {
+    if (!form.name || !form.phone || !occasion) {
+      alert('Please fill in your name, phone number, and select an occasion.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      let occasionDetails = {};
+      if (occasion === 'Wedding') occasionDetails = form.wedding;
+      if (occasion === 'Puja') occasionDetails = form.puja;
+      if (occasion === 'Business') occasionDetails = form.business;
+
+      await fetch('/api/custom-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          phone: form.phone,
+          email: form.email,
+          preferredLanguage: form.preferredLanguage,
+          occasion,
+          occasionDetails,
+          freeText: form.freeText
+        })
+      });
+      setSubmitted(true);
+    } catch (err) {
+      alert('Something went wrong submitting your request. Please try again or WhatsApp us directly.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputStyle = { width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid var(--line)', fontFamily: 'Poppins', fontSize: 14 };
+  const labelStyle = { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 };
+
+  if (submitted) {
+    return (
+      <section id="custom" style={{ maxWidth: 700, margin: '0 auto', padding: '56px 24px', textAlign: 'center' }}>
+        <div style={{ background: 'var(--sky-1)', borderRadius: 14, padding: 32 }}>
+          <h2 className="serif" style={{ marginTop: 0 }}>Thanks — we've got your request!</h2>
+          <p style={{ color: 'var(--muted)' }}>Our team will reach out to you at {form.phone} within a day with next steps and a quote.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section id="custom" style={{ maxWidth: 700, margin: '0 auto', padding: '56px 24px' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>Track B — Custom Design</div>
+      <h2 className="serif" style={{ margin: '6px 0 24px' }}>Tell us what you need</h2>
+
+      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 14, padding: 28 }}>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>What's this for?</label>
+          <select value={occasion} onChange={(e) => setOccasion(e.target.value)} style={inputStyle}>
+            <option value="">Select an occasion</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Puja">Puja / Festival</option>
+            <option value="Business">Business</option>
+            <option value="Other">Something else</option>
+          </select>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div><label style={labelStyle}>Your name</label><input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div><label style={labelStyle}>Phone number</label><input style={inputStyle} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Email (optional)</label>
+          <input style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={labelStyle}>Preferred language</label>
+          <select style={inputStyle} value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}>
+            <option>English</option><option>Bengali</option><option>Hindi</option><option>Bhojpuri</option><option>Maithili</option>
+          </select>
+        </div>
+
+        {occasion === 'Wedding' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <div><label style={labelStyle}>Couple's names</label><input style={inputStyle} placeholder="e.g. Ritu & Sourav" value={form.wedding.couple} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, couple: e.target.value } })} /></div>
+            <div><label style={labelStyle}>Wedding date</label><input type="date" style={inputStyle} value={form.wedding.date} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, date: e.target.value } })} /></div>
+            <div><label style={labelStyle}>Venue</label><input style={inputStyle} value={form.wedding.venue} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, venue: e.target.value } })} /></div>
+            <div><label style={labelStyle}>Colour theme / motif</label><input style={inputStyle} placeholder="e.g. Mithila art, maroon & gold" value={form.wedding.theme} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, theme: e.target.value } })} /></div>
+          </div>
+        )}
+
+        {occasion === 'Puja' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <div><label style={labelStyle}>Community / pandal name</label><input style={inputStyle} value={form.puja.community} onChange={(e) => setForm({ ...form, puja: { ...form.puja, community: e.target.value } })} /></div>
+            <div><label style={labelStyle}>Event dates</label><input style={inputStyle} placeholder="e.g. 1-5 Oct" value={form.puja.dates} onChange={(e) => setForm({ ...form, puja: { ...form.puja, dates: e.target.value } })} /></div>
+          </div>
+        )}
+
+        {occasion === 'Business' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+            <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={form.business.businessName} onChange={(e) => setForm({ ...form, business: { ...form.business, businessName: e.target.value } })} /></div>
+            <div><label style={labelStyle}>Business category</label><input style={inputStyle} value={form.business.businessCategory} onChange={(e) => setForm({ ...form, business: { ...form.business, businessCategory: e.target.value } })} /></div>
+          </div>
+        )}
+
+        <div style={{ marginBottom: 18 }}>
+          <label style={labelStyle}>Tell us anything else about what you need</label>
+          <textarea rows={4} style={inputStyle} placeholder="Fonts you like, reference designs, quantity, deadline..." value={form.freeText} onChange={(e) => setForm({ ...form, freeText: e.target.value })} />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          style={{ background: 'var(--basket-brown)', color: '#fff', border: 'none', borderRadius: 999, padding: '11px 22px', fontWeight: 700, cursor: 'pointer' }}
+        >
+          {submitting ? 'Sending...' : 'Send request'}
+        </button>
+      </div>
+    </section>
   );
 }
