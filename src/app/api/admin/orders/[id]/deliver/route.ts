@@ -21,14 +21,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const orderItem = order.items.find((i) => i.id === orderItemId);
   if (!orderItem) return NextResponse.json({ error: 'Order item not found' }, { status: 404 });
-
   const pathname = `deliveries/${orderId}/${orderItemId}-${file.name}`;
-  await uploadPrivateFile(pathname, file);
+  const actualPathname = await uploadPrivateFile(pathname, file);
 
   await prisma.orderItem.update({
     where: { id: orderItemId },
-    data: { deliveredFileUrl: pathname }
+    data: { deliveredFileUrl: actualPathname }
   });
+  
 
   // Mark the order delivered once every item has a delivered file.
   const updatedOrder = await prisma.order.findUnique({
@@ -41,7 +41,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   if (order.customerEmail) {
-    const downloadUrl = await getSignedDownloadUrl(pathname);
+    const downloadUrl = await getSignedDownloadUrl(actualPathname);
     await sendEmail({
       to: [{ email: order.customerEmail, name: order.customerName }],
       subject: `Your ${orderItem.product.title} is ready! — Template Tokri`,
