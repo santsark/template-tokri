@@ -38,6 +38,8 @@ export default function HomePage() {
   const [pendingInputDetails, setPendingInputDetails] = useState('');
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [customOrderOpen, setCustomOrderOpen] = useState(false);
+
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -121,7 +123,7 @@ export default function HomePage() {
           <span className="script" style={{ fontSize: 30, color: 'var(--navy)', fontWeight: 700 }}>Template Tokri</span>
             <nav style={{ display: 'flex', gap: 16, fontSize: 14, fontWeight: 600 }}>
               <a href="#catalog" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Shop</a>
-              <a href="#custom" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Custom Orders</a>
+              <button onClick={() => setCustomOrderOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', font: 'inherit', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Custom Orders</button>
             </nav>
           <input
             placeholder="Search templates..."
@@ -194,7 +196,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <CustomOrderSection />
+      {customOrderOpen && <CustomOrderSection onClose={() => setCustomOrderOpen(false)} />}
 
       {/* Product detail / input collection modal */}
       {activeProduct && (
@@ -341,7 +343,7 @@ export default function HomePage() {
   );
 }
 
-function CustomOrderSection() {
+function CustomOrderSection({ onClose }: { onClose: () => void }) {
   const [occasion, setOccasion] = useState('');
   const [form, setForm] = useState({
     name: '', phone: '', email: '', preferredLanguage: 'English',
@@ -388,85 +390,106 @@ function CustomOrderSection() {
   const inputStyle = { width: '100%', padding: 10, borderRadius: 8, border: '1.5px solid var(--line)', fontFamily: 'Poppins', fontSize: 14 };
   const labelStyle = { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 };
 
-  if (submitted) {
-    return (
-      <section id="custom" style={{ maxWidth: 700, margin: '0 auto', padding: '56px 24px', textAlign: 'center' }}>
-        <div style={{ background: 'var(--sky-1)', borderRadius: 14, padding: 32 }}>
-          <h2 className="serif" style={{ marginTop: 0 }}>Thanks — we've got your request!</h2>
-          <p style={{ color: 'var(--muted)' }}>Our team will reach out to you at {form.phone} within a day with next steps and a quote.</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section id="custom" style={{ maxWidth: 700, margin: '0 auto', padding: '56px 24px' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>Track B — Custom Design</div>
-      <h2 className="serif" style={{ margin: '6px 0 24px' }}>Tell us what you need</h2>
-
-      <div style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 14, padding: 28 }}>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>What's this for?</label>
-          <select value={occasion} onChange={(e) => setOccasion(e.target.value)} style={inputStyle}>
-            <option value="">Select an occasion</option>
-            <option value="Wedding">Wedding</option>
-            <option value="Puja">Puja / Festival</option>
-            <option value="Business">Business</option>
-            <option value="Other">Something else</option>
-          </select>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-          <div><label style={labelStyle}>Your name</label><input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div><label style={labelStyle}>Phone number</label><input style={inputStyle} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Email (optional)</label>
-          <input style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        </div>
-        <div style={{ marginBottom: 14 }}>
-          <label style={labelStyle}>Preferred language</label>
-          <select style={inputStyle} value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}>
-            <option>English</option><option>Bengali</option><option>Hindi</option><option>Bhojpuri</option><option>Maithili</option>
-          </select>
-        </div>
-
-        {occasion === 'Wedding' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div><label style={labelStyle}>Couple's names</label><input style={inputStyle} placeholder="e.g. Ritu & Sourav" value={form.wedding.couple} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, couple: e.target.value } })} /></div>
-            <div><label style={labelStyle}>Wedding date</label><input type="date" style={inputStyle} value={form.wedding.date} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, date: e.target.value } })} /></div>
-            <div><label style={labelStyle}>Venue</label><input style={inputStyle} value={form.wedding.venue} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, venue: e.target.value } })} /></div>
-            <div><label style={labelStyle}>Colour theme / motif</label><input style={inputStyle} placeholder="e.g. Mithila art, maroon & gold" value={form.wedding.theme} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, theme: e.target.value } })} /></div>
-          </div>
-        )}
-
-        {occasion === 'Puja' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div><label style={labelStyle}>Community / pandal name</label><input style={inputStyle} value={form.puja.community} onChange={(e) => setForm({ ...form, puja: { ...form.puja, community: e.target.value } })} /></div>
-            <div><label style={labelStyle}>Event dates</label><input style={inputStyle} placeholder="e.g. 1-5 Oct" value={form.puja.dates} onChange={(e) => setForm({ ...form, puja: { ...form.puja, dates: e.target.value } })} /></div>
-          </div>
-        )}
-
-        {occasion === 'Business' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-            <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={form.business.businessName} onChange={(e) => setForm({ ...form, business: { ...form.business, businessName: e.target.value } })} /></div>
-            <div><label style={labelStyle}>Business category</label><input style={inputStyle} value={form.business.businessCategory} onChange={(e) => setForm({ ...form, business: { ...form.business, businessCategory: e.target.value } })} /></div>
-          </div>
-        )}
-
-        <div style={{ marginBottom: 18 }}>
-          <label style={labelStyle}>Tell us anything else about what you need</label>
-          <textarea rows={4} style={inputStyle} placeholder="Fonts you like, reference designs, quantity, deadline..." value={form.freeText} onChange={(e) => setForm({ ...form, freeText: e.target.value })} />
-        </div>
-
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 250, padding: 20
+      }}
+    >
+      <div style={{ background: '#fff', borderRadius: 16, maxWidth: 620, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', padding: 30 }}>
         <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          style={{ background: 'var(--basket-brown)', color: '#fff', border: 'none', borderRadius: 999, padding: '11px 22px', fontWeight: 700, cursor: 'pointer' }}
+          onClick={onClose}
+          style={{ position: 'absolute', top: 16, right: 16, background: '#fff', border: '1px solid var(--line)', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', fontSize: 16, color: 'var(--muted)' }}
         >
-          {submitting ? 'Sending...' : 'Send request'}
+          ✕
         </button>
+
+        {submitted ? (
+          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>🧺</div>
+            <h2 className="serif" style={{ marginTop: 0 }}>Thanks — we've got your request!</h2>
+            <p style={{ color: 'var(--muted)' }}>
+              Our team will reach out to you at {form.phone} within a day with next steps and a quote.
+              {form.email && ' A confirmation has also been sent to your email.'}
+            </p>
+            <button
+              onClick={onClose}
+              style={{ marginTop: 16, background: 'var(--basket-brown)', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 24px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>Track B — Custom Design</div>
+            <h2 className="serif" style={{ margin: '6px 0 20px' }}>Tell us what you need</h2>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>What's this for?</label>
+              <select value={occasion} onChange={(e) => setOccasion(e.target.value)} style={inputStyle}>
+                <option value="">Select an occasion</option>
+                <option value="Wedding">Wedding</option>
+                <option value="Puja">Puja / Festival</option>
+                <option value="Business">Business</option>
+                <option value="Other">Something else</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div><label style={labelStyle}>Your name</label><input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><label style={labelStyle}>Phone number</label><input style={inputStyle} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Email (optional)</label>
+              <input style={inputStyle} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Preferred language</label>
+              <select style={inputStyle} value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}>
+                <option>English</option><option>Bengali</option><option>Hindi</option><option>Bhojpuri</option><option>Maithili</option>
+              </select>
+            </div>
+
+            {occasion === 'Wedding' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <div><label style={labelStyle}>Couple's names</label><input style={inputStyle} placeholder="e.g. Ritu & Sourav" value={form.wedding.couple} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, couple: e.target.value } })} /></div>
+                <div><label style={labelStyle}>Wedding date</label><input type="date" style={inputStyle} value={form.wedding.date} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, date: e.target.value } })} /></div>
+                <div><label style={labelStyle}>Venue</label><input style={inputStyle} value={form.wedding.venue} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, venue: e.target.value } })} /></div>
+                <div><label style={labelStyle}>Colour theme / motif</label><input style={inputStyle} placeholder="e.g. Mithila art, maroon & gold" value={form.wedding.theme} onChange={(e) => setForm({ ...form, wedding: { ...form.wedding, theme: e.target.value } })} /></div>
+              </div>
+            )}
+
+            {occasion === 'Puja' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <div><label style={labelStyle}>Community / pandal name</label><input style={inputStyle} value={form.puja.community} onChange={(e) => setForm({ ...form, puja: { ...form.puja, community: e.target.value } })} /></div>
+                <div><label style={labelStyle}>Event dates</label><input style={inputStyle} placeholder="e.g. 1-5 Oct" value={form.puja.dates} onChange={(e) => setForm({ ...form, puja: { ...form.puja, dates: e.target.value } })} /></div>
+              </div>
+            )}
+
+            {occasion === 'Business' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+                <div><label style={labelStyle}>Business name</label><input style={inputStyle} value={form.business.businessName} onChange={(e) => setForm({ ...form, business: { ...form.business, businessName: e.target.value } })} /></div>
+                <div><label style={labelStyle}>Business category</label><input style={inputStyle} value={form.business.businessCategory} onChange={(e) => setForm({ ...form, business: { ...form.business, businessCategory: e.target.value } })} /></div>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 18 }}>
+              <label style={labelStyle}>Tell us anything else about what you need</label>
+              <textarea rows={4} style={inputStyle} placeholder="Fonts you like, reference designs, quantity, deadline..." value={form.freeText} onChange={(e) => setForm({ ...form, freeText: e.target.value })} />
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              style={{ background: 'var(--basket-brown)', color: '#fff', border: 'none', borderRadius: 999, padding: '11px 22px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              {submitting ? 'Sending...' : 'Send request'}
+            </button>
+          </>
+        )}
       </div>
-    </section>
+    </div>
   );
 }

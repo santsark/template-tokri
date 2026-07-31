@@ -173,17 +173,26 @@ function ProductsTab() {
 
 function OrdersTab() {
   const [orders, setOrders] = useState<any[]>([]);
+  const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
 
   function load() {
     fetch('/api/admin/orders').then((r) => r.json()).then(setOrders);
   }
   useEffect(load, []);
 
-  async function updateStatus(id: string, status: string) {
+  async function saveStatus(id: string) {
+    setSaving((s) => ({ ...s, [id]: true }));
     await fetch(`/api/admin/orders/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status: pendingStatus[id] })
+    });
+    setSaving((s) => ({ ...s, [id]: false }));
+    setPendingStatus((p) => {
+      const next = { ...p };
+      delete next[id];
+      return next;
     });
     load();
   }
@@ -192,30 +201,45 @@ function OrdersTab() {
     <div>
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Orders</h2>
       <div style={{ display: 'grid', gap: 10 }}>
-        {orders.map((o) => (
-          <div key={o.id} style={card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <strong>{o.customerName}</strong>
-              <select value={o.status} onChange={(e) => updateStatus(o.id, e.target.value)} style={{ ...input, width: 180 }}>
-                <option value="PENDING_PAYMENT">Pending Payment</option>
-                <option value="PAID">Paid</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="DELIVERED">Delivered</option>
-                <option value="CANCELLED">Cancelled</option>
-              </select>
-            </div>
-            <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{o.customerPhone} · {o.customerEmail}</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>
-              {o.items.map((i: any) => (
-                <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 6, marginTop: 6 }}>
-                  <strong>{i.product.title}</strong> x{i.quantity} — ₹{i.unitPrice}
-                  <div style={{ fontSize: 12, color: '#6B7770' }}>Inputs: {i.inputDetails || '—'}</div>
+        {orders.map((o) => {
+          const currentValue = pendingStatus[o.id] ?? o.status;
+          const hasChange = pendingStatus[o.id] && pendingStatus[o.id] !== o.status;
+          return (
+            <div key={o.id} style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <strong>{o.customerName}</strong>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={currentValue}
+                    onChange={(e) => setPendingStatus((p) => ({ ...p, [o.id]: e.target.value }))}
+                    style={{ ...input, width: 180 }}
+                  >
+                    <option value="PENDING_PAYMENT">Pending Payment</option>
+                    <option value="PAID">Paid</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="DELIVERED">Delivered</option>
+                    <option value="CANCELLED">Cancelled</option>
+                  </select>
+                  {hasChange && (
+                    <button onClick={() => saveStatus(o.id)} disabled={saving[o.id]} style={btnPrimary}>
+                      {saving[o.id] ? 'Saving...' : 'Save'}
+                    </button>
+                  )}
                 </div>
-              ))}
+              </div>
+              <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{o.customerPhone} · {o.customerEmail}</div>
+              <div style={{ fontSize: 13, marginTop: 6 }}>
+                {o.items.map((i: any) => (
+                  <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 6, marginTop: 6 }}>
+                    <strong>{i.product.title}</strong> x{i.quantity} — ₹{i.unitPrice}
+                    <div style={{ fontSize: 12, color: '#6B7770' }}>Inputs: {i.inputDetails || '—'}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontWeight: 700, marginTop: 8 }}>Total: ₹{o.totalAmount}</div>
             </div>
-            <div style={{ fontWeight: 700, marginTop: 8 }}>Total: ₹{o.totalAmount}</div>
-          </div>
-        ))}
+          );
+        })}
         {orders.length === 0 && <p style={{ color: '#6B7770' }}>No orders yet.</p>}
       </div>
     </div>
@@ -226,17 +250,26 @@ function OrdersTab() {
 
 function LeadsTab() {
   const [leads, setLeads] = useState<any[]>([]);
+  const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
 
   function load() {
     fetch('/api/admin/leads').then((r) => r.json()).then(setLeads);
   }
   useEffect(load, []);
 
-  async function updateStatus(id: string, status: string) {
+  async function saveStatus(id: string) {
+    setSaving((s) => ({ ...s, [id]: true }));
     await fetch(`/api/admin/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status: pendingStatus[id] })
+    });
+    setSaving((s) => ({ ...s, [id]: false }));
+    setPendingStatus((p) => {
+      const next = { ...p };
+      delete next[id];
+      return next;
     });
     load();
   }
@@ -245,22 +278,37 @@ function LeadsTab() {
     <div>
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Custom Order Leads</h2>
       <div style={{ display: 'grid', gap: 10 }}>
-        {leads.map((l) => (
-          <div key={l.id} style={card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <strong>{l.name} — {l.occasion}</strong>
-              <select value={l.status} onChange={(e) => updateStatus(l.id, e.target.value)} style={{ ...input, width: 160 }}>
-                <option value="NEW">New</option>
-                <option value="CONTACTED">Contacted</option>
-                <option value="QUOTED">Quoted</option>
-                <option value="CONVERTED">Converted</option>
-                <option value="CLOSED">Closed</option>
-              </select>
+        {leads.map((l) => {
+          const currentValue = pendingStatus[l.id] ?? l.status;
+          const hasChange = pendingStatus[l.id] && pendingStatus[l.id] !== l.status;
+          return (
+            <div key={l.id} style={card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <strong>{l.name} — {l.occasion}</strong>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={currentValue}
+                    onChange={(e) => setPendingStatus((p) => ({ ...p, [l.id]: e.target.value }))}
+                    style={{ ...input, width: 160 }}
+                  >
+                    <option value="NEW">New</option>
+                    <option value="CONTACTED">Contacted</option>
+                    <option value="QUOTED">Quoted</option>
+                    <option value="CONVERTED">Converted</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                  {hasChange && (
+                    <button onClick={() => saveStatus(l.id)} disabled={saving[l.id]} style={btnPrimary}>
+                      {saving[l.id] ? 'Saving...' : 'Save'}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{l.phone} · {l.email}</div>
+              <div style={{ fontSize: 13, marginTop: 6 }}>{l.freeText}</div>
             </div>
-            <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{l.phone} · {l.email}</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>{l.freeText}</div>
-          </div>
-        ))}
+          );
+        })}
         {leads.length === 0 && <p style={{ color: '#6B7770' }}>No custom order requests yet.</p>}
       </div>
     </div>
