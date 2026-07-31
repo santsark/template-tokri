@@ -22,7 +22,8 @@ export async function getSignedDownloadUrl(pathname: string) {
   const token = await issueSignedToken({
     pathname,
     operations: ['get'],
-    validUntil: Date.now() + SEVEN_DAYS_MS
+    validUntil: Date.now() + SEVEN_DAYS_MS,
+    token: PVT_TOKEN
   });
   const { presignedUrl } = await presignUrl(token, {
     operation: 'get',
