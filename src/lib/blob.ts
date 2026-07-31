@@ -1,27 +1,34 @@
-import { put } from '@vercel/blob';
+import { put, issueSignedToken, presignUrl } from '@vercel/blob';
 
-const PRIVATE_BLOB_TOKEN =
-  process.env.BLOB_READ_WRITE_TOKEN_PVT ||
-  process.env.BLOB_READ_WRITE_TOKEN_PRIVATE ||
-  process.env.tt_blob_pvt_READ_WRITE_TOKEN;
+const PVT_TOKEN = process.env.tt_pvt_READ_WRITE_TOKEN;
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-export async function uploadPrivateBlob(file: File, folder: string) {
-  if (!PRIVATE_BLOB_TOKEN) {
-    throw new Error('Missing private blob token: set BLOB_READ_WRITE_TOKEN_PVT in environment variables.');
-  }
-
-  const blob = await put(`${folder}/${Date.now()}-${file.name}`, file, {
+export async function uploadPrivateFile(pathname: string, file: File) {
+  const blob = await put(pathname, file, {
     access: 'private',
-    token: PRIVATE_BLOB_TOKEN
+    token: PVT_TOKEN
   });
-
-  return blob.url;
+  // We store the pathname, not the raw URL — private blob URLs aren't
+  // accessible on their own, so a fresh signed link is minted whenever needed.
+  return blob.pathname;
 }
 
-export async function uploadOrderDeliveryBlob(file: File, orderId: string, itemId?: string) {
-  const folder = itemId
-    ? `orders/${orderId}/items/${itemId}`
-    : `orders/${orderId}`;
-
-  return uploadPrivateBlob(file, folder);
+/**
+ * Mints a link the customer can use to download their file, valid for up to
+ * 7 days (the maximum Vercel currently allows). If they miss the window,
+ * the admin can re-send using the stored pathname to generate a new one.
+ */
+export async function getSignedDownloadUrl(pathname: string) {
+  const token = await issueSignedToken({
+    pathname,
+    operations: ['get'],
+    validUntil: Date.now() + SEVEN_DAYS_MS
+  });
+  const { presignedUrl } = await presignUrl(token, {
+    operation: 'get',
+    pathname,
+    access: 'private',
+    validUntil: Date.now() + SEVEN_DAYS_MS
+  });
+  return presignedUrl;
 }
