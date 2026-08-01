@@ -140,6 +140,44 @@ export default function HomePage() {
         </div>
       </header>
 
+      <div style={{
+  background: 'radial-gradient(ellipse at top left, var(--sky-2), var(--sky-1) 45%, var(--cream) 85%)',
+  padding: '64px 24px 56px',
+  textAlign: 'center'
+}}>
+  <h1 className="script" style={{ fontSize: 'clamp(40px, 7vw, 68px)', color: 'var(--navy)', margin: '0 0 10px', lineHeight: 1.05 }}>
+    Your basket of regional design
+  </h1>
+  <p style={{ maxWidth: 560, margin: '0 auto 14px', color: 'var(--muted)', fontSize: 16, lineHeight: 1.6 }}>
+    Wedding cards, Puja invites, festival kits and business templates — made for Bengal, Bihar and Jharkhand,
+    in the languages your community actually speaks.
+  </p>
+  <p style={{ maxWidth: 560, margin: '0 auto 26px', color: 'var(--muted)', fontSize: 13.5 }}>
+    🧺 Quick-edit templates delivered in 24–48 hours &nbsp;·&nbsp; ✨ Fully custom designs for your big day
+  </p>
+  <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+    {['PUJA', 'WEDDING', 'BUSINESS'].map((cat) => (
+      <button
+        key={cat}
+        onClick={() => { setCategory(cat); document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' }); }}
+        style={{
+          background: '#fff', border: '1.5px solid var(--navy)', color: 'var(--navy)',
+          padding: '9px 18px', borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
+        }}
+      >
+        {cat.charAt(0) + cat.slice(1).toLowerCase()}
+      </button>
+    ))}
+    <a
+      href="#catalog"
+      style={{ background: 'var(--basket-brown)', color: '#fff', padding: '9px 18px', borderRadius: 999, fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}
+    >
+      Browse everything
+    </a>
+  </div>
+</div>
+      
+
       <section id="catalog" style={{ maxWidth: 1180, margin: '0 auto', padding: '40px 24px' }}>
         <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
           {categories.map((c) => (
