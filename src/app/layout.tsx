@@ -3,7 +3,8 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Template Tokri — Regional Design Templates',
-  description: 'Wedding, Puja, festival and business design templates for Bengal, Bihar and Jharkhand.'
+  description: 'Wedding, Puja, festival and business design templates for Bengal, Bihar and Jharkhand.',
+  icons: { icon: '/logo.png' }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

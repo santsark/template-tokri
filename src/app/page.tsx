@@ -120,7 +120,7 @@ export default function HomePage() {
     <div>
       <header style={{ position: 'sticky', top: 0, background: 'rgba(247,241,227,0.95)', borderBottom: '1px solid var(--line)', zIndex: 50 }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 20, padding: '12px 24px' }}>
-          <span className="script" style={{ fontSize: 30, color: 'var(--navy)', fontWeight: 700 }}>Template Tokri</span>
+          <img src="/logo.png" alt="Template Tokri" style={{ height: 44 }} />
             <nav style={{ display: 'flex', gap: 16, fontSize: 14, fontWeight: 600 }}>
               <a href="#catalog" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Shop</a>
                             <button onClick={() => setCustomOrderOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', font: 'inherit', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Custom Orders</button>
