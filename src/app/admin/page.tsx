@@ -211,13 +211,18 @@ function OrdersTab() {
 
   async function handleResend(orderId: string, orderItemId: string) {
     setResending((r) => ({ ...r, [orderItemId]: true }));
-    await fetch(`/api/admin/orders/${orderId}/resend-delivery`, {
+    const res = await fetch(`/api/admin/orders/${orderId}/resend-delivery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderItemId })
     });
     setResending((r) => ({ ...r, [orderItemId]: false }));
-    alert('Delivery email re-sent with a fresh link.');
+    if (res.ok) {
+      alert('Delivery email re-sent with a fresh link.');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(`Could not resend: ${data.error || 'unknown error'}`);
+    }
   }
 
   return (
