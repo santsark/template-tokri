@@ -123,7 +123,9 @@ export default function HomePage() {
           <span className="script" style={{ fontSize: 30, color: 'var(--navy)', fontWeight: 700 }}>Template Tokri</span>
             <nav style={{ display: 'flex', gap: 16, fontSize: 14, fontWeight: 600 }}>
               <a href="#catalog" style={{ color: 'var(--navy)', textDecoration: 'none' }}>Shop</a>
-              <button onClick={() => setCustomOrderOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', font: 'inherit', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Custom Orders</button>
+                            <button onClick={() => setCustomOrderOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--navy)', font: 'inherit', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Custom Orders</button>
+                            <a href="#about" style={{ color: 'var(--navy)', textDecoration: 'none' }}>About</a>
+                            <a href="#faq" style={{ color: 'var(--navy)', textDecoration: 'none' }}>FAQ</a>
             </nav>
           <input
             placeholder="Search templates..."
@@ -373,6 +375,9 @@ export default function HomePage() {
         </div>
       )}
 
+      <AboutSection />
+      <FAQSection />
+
       <footer style={{ background: 'var(--navy)', color: 'var(--sky-1)', marginTop: 60, padding: '40px 24px', textAlign: 'center' }}>
         <div className="script" style={{ fontSize: 26, color: '#fff' }}>Template Tokri</div>
         <p style={{ fontSize: 13, marginTop: 8 }}>Kolkata, West Bengal · hello@templatetokri.com</p>
@@ -529,5 +534,103 @@ function CustomOrderSection({ onClose }: { onClose: () => void }) {
         )}
       </div>
     </div>
+  );
+}function AboutSection() {
+  return (
+    <section id="about" style={{ maxWidth: 800, margin: '0 auto', padding: '56px 24px', textAlign: 'center' }}>
+      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>
+        About Us
+      </div>
+      <h2 className="serif" style={{ margin: '6px 0 20px', fontSize: 30 }}>Why Template Tokri exists</h2>
+      <p style={{ color: 'var(--muted)', fontSize: 15.5, lineHeight: 1.75, textAlign: 'left' }}>
+        Template Tokri started with a simple frustration: generic design templates never quite fit how Bengal,
+        Bihar, and Jharkhand actually celebrate. A Durga Puja invite needs to feel like Durga Puja — not a
+        repainted Western wedding template. A Mithila wedding card should carry real Mithila motifs, not a
+        generic floral border.
+      </p>
+      <p style={{ color: 'var(--muted)', fontSize: 15.5, lineHeight: 1.75, textAlign: 'left', marginTop: 14 }}>
+        So we built a "tokri" — a basket — of templates made specifically for this region: Bengali, Hindi,
+        Bhojpuri, and Maithili, across weddings, festivals, and small businesses. Pick a quick-edit template
+        and get it personalised in 24–48 hours, or work with our team on something fully custom for your big day.
+      </p>
+      <p className="script" style={{ color: 'var(--navy)', fontSize: 24, marginTop: 20 }}>
+        Real regional design, made simple.
+      </p>
+    </section>
+  );
+}
+
+function FAQSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      q: "What's the difference between quick-edit and custom design?",
+      a: 'Quick-edit (Track A) is a ready template we personalise with your details in 24–48 hours. Custom design (Track B) is built from scratch around your specific requirements.'
+    },
+    {
+      q: 'How fast will I get my files?',
+      a: 'Quick-edit: 24–48 hours after payment and receiving your details. Custom: timeline confirmed with you individually after we understand your requirements.'
+    },
+    {
+      q: 'What languages do you support?',
+      a: 'Bengali, Hindi, Bhojpuri, and Maithili, plus English.'
+    },
+    {
+      q: 'Is paying by UPI safe?',
+      a: "Yes — all payments go through Razorpay, a licensed payment gateway. We never see or store your card or UPI details."
+    },
+    {
+      q: 'Can I get a refund?',
+      a: 'It depends on the product and stage of your order — see our full Refund Policy in the footer for details.'
+    },
+    {
+      q: 'Do you deliver printed cards, or only digital files?',
+      a: "Currently we deliver digital files only — you can print locally or share them online/via WhatsApp."
+    },
+    {
+      q: 'What if I need changes after ordering?',
+      a: 'Contact us — quick-edit templates include light corrections, and custom orders include revision rounds agreed upfront.'
+    },
+    {
+      q: 'Do you only serve Bengal, Bihar, and Jharkhand?',
+      a: "That's our specialty and design focus, but anyone, anywhere, can order from us."
+    }
+  ];
+
+  return (
+    <section id="faq" style={{ maxWidth: 720, margin: '0 auto', padding: '20px 24px 56px' }}>
+      <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>
+          FAQ
+        </div>
+        <h2 className="serif" style={{ margin: '6px 0 0', fontSize: 30 }}>Common questions</h2>
+      </div>
+
+      <div style={{ display: 'grid', gap: 10 }}>
+        {faqs.map((item, i) => (
+          <div key={i} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
+            <button
+              onClick={() => setOpenIndex(openIndex === i ? null : i)}
+              style={{
+                width: '100%', textAlign: 'left', padding: '16px 18px', background: 'none', border: 'none',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                fontFamily: 'Poppins', fontWeight: 600, fontSize: 14.5, color: 'var(--navy)'
+              }}
+            >
+              {item.q}
+              <span style={{ fontSize: 18, color: 'var(--basket-brown)', flexShrink: 0, marginLeft: 12 }}>
+                {openIndex === i ? '−' : '+'}
+              </span>
+            </button>
+            {openIndex === i && (
+              <div style={{ padding: '0 18px 16px', fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.6 }}>
+                {item.a}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
