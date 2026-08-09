@@ -53,19 +53,28 @@ export default function AdminPage() {
 
 // ---------------- Products ----------------
 
+const emptyForm = {
+  id: '', slug: '', title: '', description: '', category: '', regionLanguage: '',
+  track: 'A', price: '', images: [] as string[], isActive: true
+};
+
 function ProductsTab() {
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({
-    slug: '', title: '', description: '', category: 'PUJA', regionLanguage: '',
-    track: 'A', price: '', images: [] as string[], isActive: true
-  });
+  const [form, setForm] = useState(emptyForm);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   function load() {
     fetch('/api/admin/products').then((r) => r.json()).then(setProducts);
   }
-  useEffect(load, []);
+  function loadCategories() {
+    fetch('/api/admin/categories').then((r) => r.json()).then(setCategories);
+  }
+  useEffect(() => { load(); loadCategories(); }, []);
 
   async function handleImageUpload(file: File) {
     setUploading(true);
@@ -77,14 +86,39 @@ function ProductsTab() {
     if (data.url) setForm((f) => ({ ...f, images: [...f.images, data.url] }));
   }
 
-  async function handleCreate() {
-    await fetch('/api/admin/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+  function startAdd() {
+    setForm({ ...emptyForm, category: categories[0]?.name || '' });
+    setEditingId(null);
+    setShowForm(true);
+  }
+
+  function startEdit(p: any) {
+    setForm({
+      id: p.id, slug: p.slug, title: p.title, description: p.description,
+      category: p.category, regionLanguage: p.regionLanguage, track: p.track,
+      price: String(p.price), images: p.images || [], isActive: p.isActive
     });
+    setEditingId(p.id);
+    setShowForm(true);
+  }
+
+  async function handleSave() {
+    if (editingId) {
+      await fetch(`/api/admin/products/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+    } else {
+      await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+    }
     setShowForm(false);
-    setForm({ slug: '', title: '', description: '', category: 'PUJA', regionLanguage: '', track: 'A', price: '', images: [], isActive: true });
+    setEditingId(null);
+    setForm(emptyForm);
     load();
   }
 
@@ -103,28 +137,72 @@ function ProductsTab() {
     load();
   }
 
+  async function addCategory() {
+    if (!newCategoryName.trim()) return;
+    await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newCategoryName.trim() })
+    });
+    setNewCategoryName('');
+    loadCategories();
+  }
+
+  async function deleteCategory(id: string) {
+    if (!confirm('Delete this category? Products already using it will keep the old value as plain text.')) return;
+    await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' });
+    loadCategories();
+  }
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h2 style={{ fontFamily: 'Fraunces, serif' }}>Products</h2>
-        <button onClick={() => setShowForm(!showForm)} style={btnPrimary}>
-          {showForm ? 'Cancel' : '+ Add Product'}
-        </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>
+        <h2 style={{ fontFamily: 'Fraunces, serif', margin: 0 }}>Products</h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setShowCategoryManager(!showCategoryManager)} style={btnOutline}>
+            {showCategoryManager ? 'Close categories' : 'Manage categories'}
+          </button>
+          <button onClick={showForm ? () => setShowForm(false) : startAdd} style={btnPrimary}>
+            {showForm ? 'Cancel' : '+ Add Product'}
+          </button>
+        </div>
       </div>
+
+      {showCategoryManager && (
+        <div style={{ ...card, marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, marginBottom: 10 }}>Categories</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <input
+              placeholder="New category name (e.g. Anniversary)"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              style={{ ...input, flex: 1 }}
+            />
+            <button onClick={addCategory} style={btnPrimary}>Add</button>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {categories.map((c) => (
+              <span key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F7F1E3', padding: '5px 10px', borderRadius: 999, fontSize: 13 }}>
+                {c.name}
+                <button onClick={() => deleteCategory(c.id)} style={{ background: 'none', border: 'none', color: '#A64A2A', cursor: 'pointer', fontWeight: 700 }}>×</button>
+              </span>
+            ))}
+            {categories.length === 0 && <span style={{ fontSize: 13, color: '#6B7770' }}>No categories yet — add one above.</span>}
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={card}>
           <div style={twoCol}>
-            <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })} style={input} />
+            <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: editingId ? form.slug : e.target.value.toLowerCase().replace(/\s+/g, '-') })} style={input} />
             <input placeholder="Price (₹)" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} style={input} />
           </div>
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ ...input, width: '100%', marginTop: 10 }} rows={3} />
           <div style={twoCol}>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} style={input}>
-              <option value="PUJA">Puja</option>
-              <option value="WEDDING">Wedding</option>
-              <option value="BUSINESS">Business</option>
-              <option value="OTHER">Other</option>
+              <option value="">Select category</option>
+              {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
             <select value={form.track} onChange={(e) => setForm({ ...form, track: e.target.value })} style={input}>
               <option value="A">Track A — Quick edit</option>
@@ -144,13 +222,15 @@ function ProductsTab() {
             </div>
           </div>
 
-          <button onClick={handleCreate} style={{ ...btnPrimary, marginTop: 14 }}>Save Product</button>
+          <button onClick={handleSave} style={{ ...btnPrimary, marginTop: 14 }}>
+            {editingId ? 'Save Changes' : 'Save Product'}
+          </button>
         </div>
       )}
 
       <div style={{ display: 'grid', gap: 10 }}>
         {products.map((p) => (
-          <div key={p.id} style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div key={p.id} style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
             <div>
               <strong>{p.title}</strong> — ₹{p.price}
               <div style={{ fontSize: 12, color: '#6B7770' }}>{p.category} · {p.regionLanguage} · Track {p.track}</div>
@@ -159,6 +239,7 @@ function ProductsTab() {
               <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 999, background: p.isActive ? '#E4F1EE' : '#f0e0e0', color: p.isActive ? '#1F5D57' : '#A64A2A' }}>
                 {p.isActive ? 'Active' : 'Inactive'}
               </span>
+              <button onClick={() => startEdit(p)} style={btnOutline}>Edit</button>
               <button onClick={() => toggleActive(p)} style={btnOutline}>{p.isActive ? 'Deactivate' : 'Activate'}</button>
               <button onClick={() => deleteProduct(p.id)} style={{ ...btnOutline, color: '#A64A2A', borderColor: '#A64A2A' }}>Delete</button>
             </div>
