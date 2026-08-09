@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     });
 
     const summary = `Order ${order.id} paid — ₹${order.totalAmount} — ${order.customerName} (${order.customerPhone}). Items: ${order.items
-      .map((i) => `${i.product.title} x${i.quantity}`)
+      .map((i) => `${i.product?.title || i.customTitle || 'Custom item'} x${i.quantity}`)
       .join(', ')}`;
     await notifyAdminOfNewOrder(summary);
   }
