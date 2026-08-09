@@ -1,3 +1,4 @@
+=== src/lib/razorpay.ts ===
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
@@ -35,4 +36,33 @@ export function verifyWebhookSignature(rawBody: string, signature: string) {
     .update(rawBody)
     .digest('hex');
   return expected === signature;
+}
+
+/**
+ * Creates a Razorpay Payment Link for a custom order lead — a shareable
+ * link for a specific amount (full or partial advance) that the admin
+ * sends manually via WhatsApp/email. Doesn't require the customer to
+ * visit the site.
+ */
+export async function createPaymentLink(params: {
+  amount: number; // whole rupees
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  description: string;
+  referenceId: string;
+}) {
+  const link = await razorpay.paymentLink.create({
+    amount: params.amount * 100,
+    currency: 'INR',
+    description: params.description,
+    customer: {
+      name: params.customerName,
+      contact: params.customerPhone,
+      email: params.customerEmail
+    },
+    notify: { sms: true, email: !!params.customerEmail },
+    reference_id: params.referenceId
+  });
+  return link;
 }

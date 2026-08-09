@@ -20,12 +20,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!order.customerEmail) {
     return NextResponse.json({ error: 'No email on file for this order' }, { status: 400 });
   }
+  const itemTitle = orderItem.product?.title || orderItem.customTitle || 'Your design';
 
   const downloadUrl = await getSignedDownloadUrl(orderItem.deliveredFileUrl);
   await sendEmail({
     to: [{ email: order.customerEmail, name: order.customerName }],
-    subject: `Your ${orderItem.product.title} — download link (resent) — Template Tokri`,
-    htmlContent: `<p>Hi ${order.customerName},</p><p>Here's a fresh download link for your <strong>${orderItem.product.title}</strong>:</p><p><a href="${downloadUrl}">${downloadUrl}</a></p><p>This link is valid for 7 days.</p><p>Thank you for choosing Template Tokri!</p>`
+    subject: `Your ${itemTitle} — download link (resent) — Template Tokri`,
+    htmlContent: `<p>Hi ${order.customerName},</p><p>Here's a fresh download link for your <strong>${itemTitle}</strong>:</p><p><a href="${downloadUrl}">${downloadUrl}</a></p><p>This link is valid for 7 days.</p><p>Thank you for choosing Template Tokri!</p>`
   });
 
   return NextResponse.json({ success: true });

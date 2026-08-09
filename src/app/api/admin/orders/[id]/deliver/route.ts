@@ -21,14 +21,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const orderItem = order.items.find((i) => i.id === orderItemId);
   if (!orderItem) return NextResponse.json({ error: 'Order item not found' }, { status: 404 });
+  const itemTitle = orderItem.product?.title || orderItem.customTitle || 'Your design';
+
   const pathname = `deliveries/${orderId}/${orderItemId}-${file.name}`;
-  const actualPathname = await uploadPrivateFile(pathname, file);
+  await uploadPrivateFile(pathname, file);
 
   await prisma.orderItem.update({
     where: { id: orderItemId },
-    data: { deliveredFileUrl: actualPathname }
+    data: { deliveredFileUrl: pathname }
   });
-  
 
   // Mark the order delivered once every item has a delivered file.
   const updatedOrder = await prisma.order.findUnique({
@@ -41,11 +42,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   if (order.customerEmail) {
-    const downloadUrl = await getSignedDownloadUrl(actualPathname);
+    const downloadUrl = await getSignedDownloadUrl(pathname);
     await sendEmail({
       to: [{ email: order.customerEmail, name: order.customerName }],
-      subject: `Your ${orderItem.product.title} is ready! — Template Tokri`,
-      htmlContent: `<p>Hi ${order.customerName},</p><p>Your personalised <strong>${orderItem.product.title}</strong> is ready! Download it here:</p><p><a href="${downloadUrl}">${downloadUrl}</a></p><p>This link is valid for 7 days — if it expires, just reply to this email or WhatsApp us and we'll send a fresh one.</p><p>Thank you for choosing Template Tokri!</p>`
+      subject: `Your ${itemTitle} is ready! — Template Tokri`,
+      htmlContent: `<p>Hi ${order.customerName},</p><p>Your personalised <strong>${itemTitle}</strong> is ready! Download it here:</p><p><a href="${downloadUrl}">${downloadUrl}</a></p><p>This link is valid for 7 days — if it expires, just reply to this email or WhatsApp us and we'll send a fresh one.</p><p>Thank you for choosing Template Tokri!</p>`
     });
   }
 

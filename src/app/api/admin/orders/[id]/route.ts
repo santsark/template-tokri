@@ -8,7 +8,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const order = await prisma.order.update({
     where: { id },
     data: {
-      ...(data.status !== undefined && { status: data.status })
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.notes !== undefined && { notes: data.notes })
     }
   });
 

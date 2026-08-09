@@ -27,7 +27,7 @@ declare global {
 }
 
 export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [categoryList, setCategoryList] = useState<{ id: string; name: string }[]>([]);
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -40,6 +40,9 @@ export default function HomePage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [customOrderOpen, setCustomOrderOpen] = useState(false);
 
+  useEffect(() => {
+    fetch('/api/categories').then((r) => r.json()).then(setCategoryList).catch(() => setCategoryList([]));
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -114,7 +117,7 @@ export default function HomePage() {
     }
   }
 
-  const categories = ['All', 'PUJA', 'WEDDING', 'BUSINESS'];
+  const categories = ['All', ...categoryList.map((c) => c.name)];
 
   return (
     <div>
@@ -158,16 +161,16 @@ export default function HomePage() {
     🧺 Quick-edit templates delivered in 24–48 hours &nbsp;·&nbsp; ✨ Fully custom designs for your big day
   </p>
   <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-    {['PUJA', 'WEDDING', 'BUSINESS'].map((cat) => (
+    {categoryList.slice(0, 3).map((cat) => (
       <button
-        key={cat}
-        onClick={() => { setCategory(cat); document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' }); }}
+        key={cat.id}
+        onClick={() => { setCategory(cat.name); document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth' }); }}
         style={{
           background: '#fff', border: '1.5px solid var(--navy)', color: 'var(--navy)',
           padding: '9px 18px', borderRadius: 999, fontSize: 13.5, fontWeight: 600, cursor: 'pointer'
         }}
       >
-        {cat.charAt(0) + cat.slice(1).toLowerCase()}
+        {cat.name}
       </button>
     ))}
     <a
@@ -196,7 +199,7 @@ export default function HomePage() {
                 color: category === c ? '#fff' : 'var(--navy)'
               }}
             >
-              {c === 'All' ? 'All' : c.charAt(0) + c.slice(1).toLowerCase()}
+              {c}
             </button>
           ))}
         </div>

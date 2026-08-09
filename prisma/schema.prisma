@@ -6,20 +6,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 // ---------- Enums ----------
-
-enum ProductCategory {
-  PUJA
-  WEDDING
-  BUSINESS
-  OTHER
-}
 
 enum ProductTrack {
   A // Ready-made template, quick-edited with customer inputs, delivered in 24-48h
@@ -40,9 +32,19 @@ enum LeadStatus {
   QUOTED
   CONVERTED
   CLOSED
+  CANCELLED
 }
 
 // ---------- Models ----------
+
+// Manageable category list — replaces the old fixed enum so categories
+// can be added/removed from the admin page without a code change.
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique // e.g. "Puja", "Wedding", "Business"
+  slug      String   @unique // e.g. "puja", "wedding", "business"
+  createdAt DateTime @default(now())
+}
 
 // Optional account. Guest checkout never requires this —
 // an Order can exist with userId = null.
@@ -56,20 +58,20 @@ model User {
 }
 
 model Product {
-  id          String          @id @default(cuid())
-  slug        String          @unique
+  id          String      @id @default(cuid())
+  slug        String      @unique
   title       String
   description String
-  category    ProductCategory
-  regionLanguage String       // e.g. "Bengali", "Maithili", "Bhojpuri", "Hindi", "English"
+  category    String      // free text, sourced from the Category list in admin
+  regionLanguage String   // e.g. "Bengali", "Maithili", "Bhojpuri", "Hindi", "English"
   track       ProductTrack
-  price       Int             // stored in paise-free rupees (whole rupees) for simplicity
-  images      String[]        // public Blob URLs (template-tokri-blob-public)
+  price       Int         // stored in paise-free rupees (whole rupees) for simplicity
+  images      String[]    // public Blob URLs (template-tokri-blob-public)
   tags        String[]
-  isActive    Boolean         @default(true)
-  isSeasonal  Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  isActive    Boolean     @default(true)
+  isSeasonal  Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   orderItems  OrderItem[]
 }
 
@@ -82,22 +84,27 @@ model Order {
   customerEmail     String?
   status            OrderStatus @default(PENDING_PAYMENT)
   totalAmount       Int
+  notes             String?     // internal notes: offline messages, comments, follow-ups
   razorpayOrderId   String?     @unique
   razorpayPaymentId String?     @unique
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   items             OrderItem[]
+  convertedFromLead CustomOrderLead?
 }
 
 // Captures the per-item quick-edit inputs for Track A products
 // (name/date/text the customer wants on the template) as agreed:
 // name + phone live on the Order; item-specific details live here.
+// productId is optional because orders created from a converted custom
+// lead don't map to a catalog product — customTitle covers that case.
 model OrderItem {
   id                String   @id @default(cuid())
   order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId           String
-  product           Product  @relation(fields: [productId], references: [id])
-  productId         String
+  product           Product? @relation(fields: [productId], references: [id])
+  productId         String?
+  customTitle       String?  // used instead of product.title for converted custom leads
   quantity          Int      @default(1)
   unitPrice         Int
   inputDetails      String   // free-text block: names/date/wording for this template
@@ -108,15 +115,21 @@ model OrderItem {
 // Track B custom design requests — collected via the occasion-aware
 // contact form, independent of the cart/checkout flow.
 model CustomOrderLead {
-  id               String     @id @default(cuid())
-  name             String
-  phone            String
-  email            String?
+  id                String     @id @default(cuid())
+  name              String
+  phone             String
+  email             String?
   preferredLanguage String?
-  occasion         String     // "Wedding" | "Puja" | "Business" | "Other"
-  occasionDetails  Json?      // dynamic fields depending on occasion
-  freeText         String?
-  referenceFileUrl String?
-  status           LeadStatus @default(NEW)
-  createdAt        DateTime   @default(now())
+  occasion          String     // "Wedding" | "Puja" | "Business" | "Other"
+  occasionDetails   Json?      // dynamic fields depending on occasion
+  freeText          String?
+  referenceFileUrl  String?
+  status            LeadStatus @default(NEW)
+  notes             String?    // running log of discussions/comments with this lead
+  amountQuoted      Int?       // in whole rupees
+  paymentLinkUrl    String?    // most recently generated Razorpay Payment Link
+  paymentLinkId     String?
+  convertedOrderId  String?    @unique
+  convertedOrder    Order?     @relation(fields: [convertedOrderId], references: [id])
+  createdAt         DateTime   @default(now())
 }
