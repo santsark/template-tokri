@@ -25,8 +25,8 @@ declare global {
     Razorpay: any;
   }
 }
-
 export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [categoryList, setCategoryList] = useState<{ id: string; name: string }[]>([]);
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
