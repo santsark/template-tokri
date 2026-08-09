@@ -255,6 +255,7 @@ function ProductsTab() {
 function OrdersTab() {
   const [orders, setOrders] = useState<any[]>([]);
   const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
+  const [pendingNotes, setPendingNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [resending, setResending] = useState<Record<string, boolean>>({});
@@ -272,11 +273,19 @@ function OrdersTab() {
       body: JSON.stringify({ status: pendingStatus[id] })
     });
     setSaving((s) => ({ ...s, [id]: false }));
-    setPendingStatus((p) => {
-      const next = { ...p };
-      delete next[id];
-      return next;
+    setPendingStatus((p) => { const n = { ...p }; delete n[id]; return n; });
+    load();
+  }
+
+  async function saveNotes(id: string) {
+    setSaving((s) => ({ ...s, [`notes-${id}`]: true }));
+    await fetch(`/api/admin/orders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes: pendingNotes[id] })
     });
+    setSaving((s) => ({ ...s, [`notes-${id}`]: false }));
+    setPendingNotes((p) => { const n = { ...p }; delete n[id]; return n; });
     load();
   }
 
@@ -311,15 +320,18 @@ function OrdersTab() {
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Orders</h2>
       <div style={{ display: 'grid', gap: 10 }}>
         {orders.map((o) => {
-          const currentValue = pendingStatus[o.id] ?? o.status;
-          const hasChange = pendingStatus[o.id] && pendingStatus[o.id] !== o.status;
+          const currentStatus = pendingStatus[o.id] ?? o.status;
+          const statusChanged = pendingStatus[o.id] && pendingStatus[o.id] !== o.status;
+          const currentNotes = pendingNotes[o.id] ?? (o.notes || '');
+          const notesChanged = pendingNotes[o.id] !== undefined && pendingNotes[o.id] !== (o.notes || '');
+
           return (
             <div key={o.id} style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <strong>{o.customerName}</strong>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
-                    value={currentValue}
+                    value={currentStatus}
                     onChange={(e) => setPendingStatus((p) => ({ ...p, [o.id]: e.target.value }))}
                     style={{ ...input, width: 180 }}
                   >
@@ -329,7 +341,7 @@ function OrdersTab() {
                     <option value="DELIVERED">Delivered</option>
                     <option value="CANCELLED">Cancelled</option>
                   </select>
-                  {hasChange && (
+                  {statusChanged && (
                     <button onClick={() => saveStatus(o.id)} disabled={saving[o.id]} style={btnPrimary}>
                       {saving[o.id] ? 'Saving...' : 'Save'}
                     </button>
@@ -337,50 +349,58 @@ function OrdersTab() {
                 </div>
               </div>
               <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{o.customerPhone} · {o.customerEmail}</div>
-              <div style={{ fontSize: 13, marginTop: 6 }}>
-                {o.items.map((i: any) => (
-                  <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 8, marginTop: 8 }}>
-                    <strong>{i.product.title}</strong> x{i.quantity} — ₹{i.unitPrice}
-                    <div style={{ fontSize: 12, color: '#6B7770' }}>Inputs: {i.inputDetails || '—'}</div>
 
-                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      {i.deliveredFileUrl ? (
-                        <>
-                          <span style={{ fontSize: 12, color: '#1F5D57', background: '#E4F1EE', padding: '3px 10px', borderRadius: 999 }}>
-                            ✓ Delivered
-                          </span>
-                          <button
-                            onClick={() => handleResend(o.id, i.id)}
-                            disabled={resending[i.id]}
-                            style={btnOutline}
-                          >
-                            {resending[i.id] ? 'Sending...' : 'Resend email'}
-                          </button>
-                          <label style={{ ...btnOutline, cursor: 'pointer' }}>
-                            Replace file
-                            <input
-                              type="file"
-                              style={{ display: 'none' }}
-                              onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])}
-                            />
+              <div style={{ fontSize: 13, marginTop: 6 }}>
+                {o.items.map((i: any) => {
+                  const itemTitle = i.product?.title || i.customTitle || 'Custom item';
+                  return (
+                    <div key={i.id} style={{ borderTop: '1px solid #E4DFD3', paddingTop: 8, marginTop: 8 }}>
+                      <strong>{itemTitle}</strong> x{i.quantity} — ₹{i.unitPrice}
+                      <div style={{ fontSize: 12, color: '#6B7770' }}>Inputs: {i.inputDetails || '—'}</div>
+
+                      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        {i.deliveredFileUrl ? (
+                          <>
+                            <span style={{ fontSize: 12, color: '#1F5D57', background: '#E4F1EE', padding: '3px 10px', borderRadius: 999 }}>
+                              ✓ Delivered
+                            </span>
+                            <button onClick={() => handleResend(o.id, i.id)} disabled={resending[i.id]} style={btnOutline}>
+                              {resending[i.id] ? 'Sending...' : 'Resend email'}
+                            </button>
+                            <label style={{ ...btnOutline, cursor: 'pointer' }}>
+                              Replace file
+                              <input type="file" style={{ display: 'none' }} onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])} />
+                            </label>
+                          </>
+                        ) : (
+                          <label style={{ ...btnPrimary, cursor: 'pointer', display: 'inline-block' }}>
+                            {uploading[i.id] ? 'Uploading...' : 'Upload finished file'}
+                            <input type="file" style={{ display: 'none' }} disabled={uploading[i.id]} onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])} />
                           </label>
-                        </>
-                      ) : (
-                        <label style={{ ...btnPrimary, cursor: 'pointer', display: 'inline-block' }}>
-                          {uploading[i.id] ? 'Uploading...' : 'Upload finished file'}
-                          <input
-                            type="file"
-                            style={{ display: 'none' }}
-                            disabled={uploading[i.id]}
-                            onChange={(e) => e.target.files && handleDeliverFile(o.id, i.id, e.target.files[0])}
-                          />
-                        </label>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
               <div style={{ fontWeight: 700, marginTop: 10 }}>Total: ₹{o.totalAmount}</div>
+
+              <div style={{ marginTop: 12, borderTop: '1px solid #E4DFD3', paddingTop: 10 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Notes (offline messages, comments)</label>
+                <textarea
+                  rows={2}
+                  value={currentNotes}
+                  onChange={(e) => setPendingNotes((p) => ({ ...p, [o.id]: e.target.value }))}
+                  style={{ ...input, width: '100%' }}
+                  placeholder="e.g. Customer called to confirm spelling of names on 2 Aug"
+                />
+                {notesChanged && (
+                  <button onClick={() => saveNotes(o.id)} disabled={saving[`notes-${o.id}`]} style={{ ...btnPrimary, marginTop: 6 }}>
+                    {saving[`notes-${o.id}`] ? 'Saving...' : 'Save notes'}
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
@@ -395,27 +415,51 @@ function OrdersTab() {
 function LeadsTab() {
   const [leads, setLeads] = useState<any[]>([]);
   const [pendingStatus, setPendingStatus] = useState<Record<string, string>>({});
+  const [pendingNotes, setPendingNotes] = useState<Record<string, string>>({});
+  const [pendingQuote, setPendingQuote] = useState<Record<string, string>>({});
+  const [linkAmount, setLinkAmount] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  const [generatingLink, setGeneratingLink] = useState<Record<string, boolean>>({});
 
   function load() {
     fetch('/api/admin/leads').then((r) => r.json()).then(setLeads);
   }
   useEffect(load, []);
 
-  async function saveStatus(id: string) {
-    setSaving((s) => ({ ...s, [id]: true }));
+  async function saveField(id: string, field: 'status' | 'notes' | 'amountQuoted', value: string) {
+    const key = `${field}-${id}`;
+    setSaving((s) => ({ ...s, [key]: true }));
     await fetch(`/api/admin/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: pendingStatus[id] })
+      body: JSON.stringify({ [field]: value })
     });
-    setSaving((s) => ({ ...s, [id]: false }));
-    setPendingStatus((p) => {
-      const next = { ...p };
-      delete next[id];
-      return next;
-    });
+    setSaving((s) => ({ ...s, [key]: false }));
+    if (field === 'status') setPendingStatus((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (field === 'notes') setPendingNotes((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (field === 'amountQuoted') setPendingQuote((p) => { const n = { ...p }; delete n[id]; return n; });
     load();
+  }
+
+  async function generateLink(id: string, lead: any) {
+    const amount = linkAmount[id] || String(lead.amountQuoted || '');
+    if (!amount || Number(amount) <= 0) {
+      alert('Enter a valid amount first.');
+      return;
+    }
+    setGeneratingLink((g) => ({ ...g, [id]: true }));
+    const res = await fetch(`/api/admin/leads/${id}/payment-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: Number(amount) })
+    });
+    setGeneratingLink((g) => ({ ...g, [id]: false }));
+    if (res.ok) {
+      load();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(`Could not generate link: ${data.error || 'unknown error'}`);
+    }
   }
 
   return (
@@ -423,15 +467,20 @@ function LeadsTab() {
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Custom Order Leads</h2>
       <div style={{ display: 'grid', gap: 10 }}>
         {leads.map((l) => {
-          const currentValue = pendingStatus[l.id] ?? l.status;
-          const hasChange = pendingStatus[l.id] && pendingStatus[l.id] !== l.status;
+          const currentStatus = pendingStatus[l.id] ?? l.status;
+          const statusChanged = pendingStatus[l.id] && pendingStatus[l.id] !== l.status;
+          const currentNotes = pendingNotes[l.id] ?? (l.notes || '');
+          const notesChanged = pendingNotes[l.id] !== undefined && pendingNotes[l.id] !== (l.notes || '');
+          const currentQuote = pendingQuote[l.id] ?? String(l.amountQuoted ?? '');
+          const quoteChanged = pendingQuote[l.id] !== undefined && pendingQuote[l.id] !== String(l.amountQuoted ?? '');
+
           return (
             <div key={l.id} style={card}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <strong>{l.name} — {l.occasion}</strong>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
-                    value={currentValue}
+                    value={currentStatus}
                     onChange={(e) => setPendingStatus((p) => ({ ...p, [l.id]: e.target.value }))}
                     style={{ ...input, width: 160 }}
                   >
@@ -440,16 +489,89 @@ function LeadsTab() {
                     <option value="QUOTED">Quoted</option>
                     <option value="CONVERTED">Converted</option>
                     <option value="CLOSED">Closed</option>
+                    <option value="CANCELLED">Cancelled</option>
                   </select>
-                  {hasChange && (
-                    <button onClick={() => saveStatus(l.id)} disabled={saving[l.id]} style={btnPrimary}>
-                      {saving[l.id] ? 'Saving...' : 'Save'}
+                  {statusChanged && (
+                    <button onClick={() => saveField(l.id, 'status', currentStatus)} disabled={saving[`status-${l.id}`]} style={btnPrimary}>
+                      {saving[`status-${l.id}`] ? 'Saving...' : 'Save'}
                     </button>
                   )}
                 </div>
               </div>
               <div style={{ fontSize: 12, color: '#6B7770', margin: '4px 0' }}>{l.phone} · {l.email}</div>
               <div style={{ fontSize: 13, marginTop: 6 }}>{l.freeText}</div>
+
+              {l.convertedOrder && (
+                <div style={{ marginTop: 10, fontSize: 12, background: '#E4F1EE', color: '#1F5D57', padding: '6px 10px', borderRadius: 8, display: 'inline-block' }}>
+                  ✓ Converted to order — status: <strong>{l.convertedOrder.status}</strong> (see Orders tab for delivery)
+                </div>
+              )}
+
+              <div style={{ marginTop: 12, borderTop: '1px solid #E4DFD3', paddingTop: 10 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Notes (discussion log)</label>
+                <textarea
+                  rows={3}
+                  value={currentNotes}
+                  onChange={(e) => setPendingNotes((p) => ({ ...p, [l.id]: e.target.value }))}
+                  style={{ ...input, width: '100%' }}
+                  placeholder="e.g. Called on 2 Aug, wants gold accents, will confirm budget by Friday"
+                />
+                {notesChanged && (
+                  <button onClick={() => saveField(l.id, 'notes', currentNotes)} disabled={saving[`notes-${l.id}`]} style={{ ...btnPrimary, marginTop: 6 }}>
+                    {saving[`notes-${l.id}`] ? 'Saving...' : 'Save notes'}
+                  </button>
+                )}
+              </div>
+
+              <div style={{ marginTop: 12, borderTop: '1px solid #E4DFD3', paddingTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Amount Quoted (₹)</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="number"
+                      value={currentQuote}
+                      onChange={(e) => setPendingQuote((p) => ({ ...p, [l.id]: e.target.value }))}
+                      style={{ ...input, width: 120 }}
+                      placeholder="e.g. 1500"
+                    />
+                    {quoteChanged && (
+                      <button onClick={() => saveField(l.id, 'amountQuoted', currentQuote)} disabled={saving[`amountQuoted-${l.id}`]} style={btnPrimary}>
+                        {saving[`amountQuoted-${l.id}`] ? '...' : 'Save'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Generate Payment Link</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="number"
+                      placeholder={l.amountQuoted ? `Full: ₹${l.amountQuoted}` : 'Amount'}
+                      value={linkAmount[l.id] ?? ''}
+                      onChange={(e) => setLinkAmount((p) => ({ ...p, [l.id]: e.target.value }))}
+                      style={{ ...input, width: 140 }}
+                    />
+                    <button onClick={() => generateLink(l.id, l)} disabled={generatingLink[l.id]} style={btnPrimary}>
+                      {generatingLink[l.id] ? 'Generating...' : 'Generate'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6B7770', marginTop: 4 }}>Leave blank to use full quoted amount, or enter a partial advance.</div>
+                </div>
+              </div>
+
+              {l.paymentLinkUrl && (
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 12, color: '#6B7770' }}>Latest link:</span>
+                  <a href={l.paymentLinkUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#1E2B3C', wordBreak: 'break-all' }}>{l.paymentLinkUrl}</a>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(l.paymentLinkUrl); alert('Copied to clipboard.'); }}
+                    style={{ ...btnOutline, fontSize: 11, padding: '3px 8px' }}
+                  >
+                    Copy
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
