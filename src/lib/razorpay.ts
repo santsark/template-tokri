@@ -1,4 +1,3 @@
-=== src/lib/razorpay.ts ===
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
