@@ -287,23 +287,13 @@ export default function HomePage() {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
               <strong>₹{activeProduct.price}</strong>
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 14px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: 2 }} />
-                <span>
-                  I agree to the{' '}
-                  <a href="/terms-of-use" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Terms of Use</a>
-                  {' '}and{' '}
-                  <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
-                </span>
-              </label>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setCheckoutOpen(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Back</button>
+                <button onClick={() => setActiveProduct(null)} style={{ padding: '9px 16px', borderRadius: 999, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Cancel</button>
                 <button
-                  disabled={placingOrder || !agreedToTerms}
-                  onClick={handlePayment}
-                  style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: agreedToTerms ? 'var(--navy)' : '#ccc', color: '#fff', fontWeight: 700, cursor: agreedToTerms ? 'pointer' : 'not-allowed' }}
+                  onClick={() => addToCart(activeProduct, pendingInputDetails)}
+                  style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: 'var(--basket-brown)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
                 >
-                  {placingOrder ? 'Please wait...' : 'Pay via UPI'}
+                  Add to Tokri
                 </button>
               </div>
             </div>
@@ -386,12 +376,30 @@ export default function HomePage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, margin: '14px 0' }}>
               <span>Total</span><span>₹{cartTotal()}</span>
             </div>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 14px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: 2 }} />
+              <span>
+                I agree to the{' '}
+                <a href="/terms-of-use" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Terms of Use</a>
+                {' '}and{' '}
+                <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
+              </span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 14px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: 2 }} />
+              <span>
+                I agree to the{' '}
+                <a href="/terms-of-use" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Terms of Use</a>
+                {' '}and{' '}
+                <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
+              </span>
+            </label>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setCheckoutOpen(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Back</button>
               <button
-                disabled={placingOrder}
+                disabled={placingOrder || !agreedToTerms}
                 onClick={handlePayment}
-                style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: 'var(--navy)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: agreedToTerms ? 'var(--navy)' : '#ccc', color: '#fff', fontWeight: 700, cursor: agreedToTerms ? 'pointer' : 'not-allowed' }}
               >
                 {placingOrder ? 'Please wait...' : 'Pay via UPI'}
               </button>
