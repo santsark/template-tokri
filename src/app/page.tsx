@@ -385,15 +385,6 @@ export default function HomePage() {
                 <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
               </span>
             </label>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 14px', cursor: 'pointer' }}>
-              <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: 2 }} />
-              <span>
-                I agree to the{' '}
-                <a href="/terms-of-use" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Terms of Use</a>
-                {' '}and{' '}
-                <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
-              </span>
-            </label>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setCheckoutOpen(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Back</button>
               <button
