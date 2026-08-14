@@ -67,6 +67,9 @@ function ProductsTab() {
   const [form, setForm] = useState(emptyForm);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
 
   function load() {
     fetch('/api/admin/products').then((r) => r.json()).then(setProducts);
@@ -154,6 +157,19 @@ function ProductsTab() {
     loadCategories();
   }
 
+  function copyProductLink(slug: string) {
+    const url = `${window.location.origin}/?product=${slug}`;
+    navigator.clipboard.writeText(url);
+    alert(`Link copied:\n${url}`);
+  }
+
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
+    const matchesStatus = filterStatus === 'All' || (filterStatus === 'Active' ? p.isActive : !p.isActive);
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>
@@ -166,6 +182,24 @@ function ProductsTab() {
             {showForm ? 'Cancel' : '+ Add Product'}
           </button>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ ...input, flex: 1, minWidth: 180 }}
+        />
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} style={input}>
+          <option value="All">All categories</option>
+          {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+        </select>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={input}>
+          <option value="All">All statuses</option>
+          <option value="Active">Active only</option>
+          <option value="Inactive">Inactive only</option>
+        </select>
       </div>
 
       {showCategoryManager && (
@@ -212,12 +246,24 @@ function ProductsTab() {
           <input placeholder="Region / Language (e.g. Bengali)" value={form.regionLanguage} onChange={(e) => setForm({ ...form, regionLanguage: e.target.value })} style={{ ...input, width: '100%', marginTop: 10 }} />
 
           <div style={{ marginTop: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 600 }}>Product image</label><br />
+            <label style={{ fontSize: 13, fontWeight: 600 }}>Product image (max 4.5MB per photo)</label><br />
             <input type="file" accept="image/*" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} />
             {uploading && <span style={{ fontSize: 12, color: '#6B7770' }}> Uploading...</span>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              {form.images.map((url) => (
-                <img key={url} src={url} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+              {form.images.map((url, idx) => (
+                <div key={url} style={{ position: 'relative' }}>
+                  <img src={url} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6 }} />
+                  <button
+                    onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }))}
+                    style={{
+                      position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%',
+                      background: '#A64A2A', color: '#fff', border: '2px solid #fff', fontSize: 11,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -229,22 +275,24 @@ function ProductsTab() {
       )}
 
       <div style={{ display: 'grid', gap: 10 }}>
-        {products.map((p) => (
+        {filteredProducts.map((p) => (
           <div key={p.id} style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
             <div>
               <strong>{p.title}</strong> — ₹{p.price}
               <div style={{ fontSize: 12, color: '#6B7770' }}>{p.category} · {p.regionLanguage} · Track {p.track}</div>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 999, background: p.isActive ? '#E4F1EE' : '#f0e0e0', color: p.isActive ? '#1F5D57' : '#A64A2A' }}>
                 {p.isActive ? 'Active' : 'Inactive'}
               </span>
+              <button onClick={() => copyProductLink(p.slug)} style={btnOutline}>Copy link</button>
               <button onClick={() => startEdit(p)} style={btnOutline}>Edit</button>
               <button onClick={() => toggleActive(p)} style={btnOutline}>{p.isActive ? 'Deactivate' : 'Activate'}</button>
               <button onClick={() => deleteProduct(p.id)} style={{ ...btnOutline, color: '#A64A2A', borderColor: '#A64A2A' }}>Delete</button>
             </div>
           </div>
         ))}
+        {filteredProducts.length === 0 && <p style={{ color: '#6B7770' }}>No products match your search/filter.</p>}
       </div>
     </div>
   );
@@ -259,6 +307,8 @@ function OrdersTab() {
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [resending, setResending] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
 
   function load() {
     fetch('/api/admin/orders').then((r) => r.json()).then(setOrders);
@@ -315,11 +365,36 @@ function OrdersTab() {
     }
   }
 
+  const filteredOrders = orders.filter((o) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || o.customerName.toLowerCase().includes(q) || o.customerPhone.includes(q) || (o.customerEmail || '').toLowerCase().includes(q);
+    const matchesStatus = filterStatus === 'All' || o.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div>
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Orders</h2>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by name, phone, or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ ...input, flex: 1, minWidth: 200 }}
+        />
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={input}>
+          <option value="All">All statuses</option>
+          <option value="PENDING_PAYMENT">Pending Payment</option>
+          <option value="PAID">Paid</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="DELIVERED">Delivered</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+
       <div style={{ display: 'grid', gap: 10 }}>
-        {orders.map((o) => {
+        {filteredOrders.map((o) => {
           const currentStatus = pendingStatus[o.id] ?? o.status;
           const statusChanged = pendingStatus[o.id] && pendingStatus[o.id] !== o.status;
           const currentNotes = pendingNotes[o.id] ?? (o.notes || '');
@@ -404,7 +479,7 @@ function OrdersTab() {
             </div>
           );
         })}
-        {orders.length === 0 && <p style={{ color: '#6B7770' }}>No orders yet.</p>}
+        {filteredOrders.length === 0 && <p style={{ color: '#6B7770' }}>No orders match your search/filter.</p>}
       </div>
     </div>
   );
@@ -420,6 +495,8 @@ function LeadsTab() {
   const [linkAmount, setLinkAmount] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [generatingLink, setGeneratingLink] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
 
   function load() {
     fetch('/api/admin/leads').then((r) => r.json()).then(setLeads);
@@ -462,11 +539,37 @@ function LeadsTab() {
     }
   }
 
+  const filteredLeads = leads.filter((l) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || l.name.toLowerCase().includes(q) || l.phone.includes(q) || l.occasion.toLowerCase().includes(q);
+    const matchesStatus = filterStatus === 'All' || l.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div>
       <h2 style={{ fontFamily: 'Fraunces, serif', marginBottom: 16 }}>Custom Order Leads</h2>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <input
+          placeholder="Search by name, phone, or occasion..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ ...input, flex: 1, minWidth: 200 }}
+        />
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={input}>
+          <option value="All">All statuses</option>
+          <option value="NEW">New</option>
+          <option value="CONTACTED">Contacted</option>
+          <option value="QUOTED">Quoted</option>
+          <option value="CONVERTED">Converted</option>
+          <option value="CLOSED">Closed</option>
+          <option value="CANCELLED">Cancelled</option>
+        </select>
+      </div>
+
       <div style={{ display: 'grid', gap: 10 }}>
-        {leads.map((l) => {
+        {filteredLeads.map((l) => {
           const currentStatus = pendingStatus[l.id] ?? l.status;
           const statusChanged = pendingStatus[l.id] && pendingStatus[l.id] !== l.status;
           const currentNotes = pendingNotes[l.id] ?? (l.notes || '');
@@ -575,7 +678,7 @@ function LeadsTab() {
             </div>
           );
         })}
-        {leads.length === 0 && <p style={{ color: '#6B7770' }}>No custom order requests yet.</p>}
+        {filteredLeads.length === 0 && <p style={{ color: '#6B7770' }}>No leads match your search/filter.</p>}
       </div>
     </div>
   );

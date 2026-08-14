@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 type Product = {
   id: string;
+  slug: string;
   title: string;
   description: string;
   category: string;
@@ -38,6 +39,7 @@ export default function HomePage() {
   const [pendingInputDetails, setPendingInputDetails] = useState('');
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [customOrderOpen, setCustomOrderOpen] = useState(false);
 
   useEffect(() => {
@@ -53,6 +55,16 @@ export default function HomePage() {
       .then(setProducts)
       .catch(() => setProducts([]));
   }, [category, search]);
+
+  useEffect(() => {
+    if (products.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const productSlug = params.get('product');
+    if (productSlug) {
+      const match = products.find((p) => (p as any).slug === productSlug);
+      if (match) setActiveProduct(match);
+    }
+  }, [products]);
 
   function addToCart(product: Product, inputDetails: string) {
     setCart((prev) => [...prev, { productId: product.id, quantity: 1, inputDetails }]);
@@ -275,13 +287,23 @@ export default function HomePage() {
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 18 }}>
               <strong>₹{activeProduct.price}</strong>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--muted)', margin: '4px 0 14px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={agreedToTerms} onChange={(e) => setAgreedToTerms(e.target.checked)} style={{ marginTop: 2 }} />
+                <span>
+                  I agree to the{' '}
+                  <a href="/terms-of-use" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Terms of Use</a>
+                  {' '}and{' '}
+                  <a href="/refund-policy" target="_blank" style={{ color: 'var(--navy)', fontWeight: 600 }}>Refund Policy</a>
+                </span>
+              </label>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setActiveProduct(null)} style={{ padding: '9px 16px', borderRadius: 999, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setCheckoutOpen(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: '#fff', cursor: 'pointer' }}>Back</button>
                 <button
-                  onClick={() => addToCart(activeProduct, pendingInputDetails)}
-                  style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: 'var(--basket-brown)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
+                  disabled={placingOrder || !agreedToTerms}
+                  onClick={handlePayment}
+                  style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: agreedToTerms ? 'var(--navy)' : '#ccc', color: '#fff', fontWeight: 700, cursor: agreedToTerms ? 'pointer' : 'not-allowed' }}
                 >
-                  Add to Tokri
+                  {placingOrder ? 'Please wait...' : 'Pay via UPI'}
                 </button>
               </div>
             </div>
@@ -384,6 +406,12 @@ export default function HomePage() {
       <footer style={{ background: 'var(--navy)', color: 'var(--sky-1)', marginTop: 60, padding: '40px 24px', textAlign: 'center' }}>
         <div className="script" style={{ fontSize: 26, color: '#fff' }}>Template Tokri</div>
         <p style={{ fontSize: 13, marginTop: 8 }}>Kolkata, West Bengal · hello@templatetokri.com</p>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginTop: 14, fontSize: 12.5 }}>
+          <a href="/terms-of-use" style={{ color: 'var(--sky-1)' }}>Terms of Use</a>
+          <a href="/privacy-policy" style={{ color: 'var(--sky-1)' }}>Privacy Policy</a>
+          <a href="/refund-policy" style={{ color: 'var(--sky-1)' }}>Refund Policy</a>
+          <a href="/delivery-policy" style={{ color: 'var(--sky-1)' }}>Delivery Policy</a>
+        </div>
       </footer>
     </div>
   );
