@@ -36,6 +36,7 @@ export default function HomePage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [pendingInputDetails, setPendingInputDetails] = useState('');
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [placingOrder, setPlacingOrder] = useState(false);
@@ -62,7 +63,7 @@ export default function HomePage() {
     const productSlug = params.get('product');
     if (productSlug) {
       const match = products.find((p) => (p as any).slug === productSlug);
-      if (match) setActiveProduct(match);
+      if (match) { setActiveProduct(match); setActiveImageIndex(0); }
     }
   }, [products]);
 
@@ -219,16 +220,23 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px,1fr))', gap: 24 }}>
           {products.map((p) => (
             <div key={p.id} style={{ background: '#fff', border: '1px solid var(--line)', borderRadius: 14, overflow: 'hidden' }}>
-              <div
-                style={{
-                  height: 160,
-                  background: p.images?.[0]
-                    ? `#eee url(${p.images[0]}) center/cover no-repeat`
-                    : p.track === 'A'
-                    ? 'linear-gradient(135deg, var(--blush), var(--gold))'
-                    : 'linear-gradient(135deg, var(--navy), var(--sage))'
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    height: 160,
+                    background: p.images?.[0]
+                      ? `#eee url(${p.images[0]}) center/cover no-repeat`
+                      : p.track === 'A'
+                      ? 'linear-gradient(135deg, var(--blush), var(--gold))'
+                      : 'linear-gradient(135deg, var(--navy), var(--sage))'
+                  }}
+                />
+                {p.images?.length > 1 && (
+                  <span style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(30,43,60,0.75)', color: '#fff', fontSize: 11, padding: '3px 9px', borderRadius: 999 }}>
+                    📷 {p.images.length}
+                  </span>
+                )}
+              </div>
               <div style={{ padding: 18 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--basket-brown)', textTransform: 'uppercase' }}>
                   {p.track === 'A' ? 'Quick-edit · 24-48h' : 'Custom design'}
@@ -238,7 +246,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                   <strong style={{ color: 'var(--basket-brown-dark)' }}>₹{p.price}</strong>
                   <button
-                    onClick={() => setActiveProduct(p)}
+                    onClick={() => { setActiveProduct(p); setActiveImageIndex(0); }}
                     style={{ background: 'none', border: '1.5px solid var(--navy)', color: 'var(--navy)', borderRadius: 999, padding: '7px 14px', cursor: 'pointer', fontWeight: 600 }}
                   >
                     View details
@@ -257,16 +265,52 @@ export default function HomePage() {
       {activeProduct && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '90%', padding: 28, maxHeight: '90vh', overflowY: 'auto' }}>
-            {activeProduct.images?.[0] && (
-              <div style={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => setLightboxImage(activeProduct.images[0])}>
-                <img
-                  src={activeProduct.images[0]}
-                  alt={activeProduct.title}
-                  style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, marginBottom: 14 }}
-                />
-                <span style={{ position: 'absolute', bottom: 22, right: 10, background: 'rgba(30,43,60,0.75)', color: '#fff', fontSize: 11, padding: '4px 9px', borderRadius: 999 }}>
-                  🔍 Tap to view full image
-                </span>
+            {activeProduct.images?.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ position: 'relative', cursor: 'zoom-in' }} onClick={() => setLightboxImage(activeProduct.images[activeImageIndex])}>
+                  <img
+                    src={activeProduct.images[activeImageIndex]}
+                    alt={activeProduct.title}
+                    style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 10, display: 'block' }}
+                  />
+                  <span style={{ position: 'absolute', bottom: 8, right: 10, background: 'rgba(30,43,60,0.75)', color: '#fff', fontSize: 11, padding: '4px 9px', borderRadius: 999 }}>
+                    🔍 Tap to view full image
+                  </span>
+                  {activeProduct.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((i) => (i === 0 ? activeProduct.images.length - 1 : i - 1)); }}
+                        style={{ position: 'absolute', top: '50%', left: 8, transform: 'translateY(-50%)', width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveImageIndex((i) => (i === activeProduct.images.length - 1 ? 0 : i + 1)); }}
+                        style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', width: 30, height: 30, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', fontSize: 16 }}
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {activeProduct.images.length > 1 && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto' }}>
+                    {activeProduct.images.map((img, idx) => (
+                      <img
+                        key={img}
+                        src={img}
+                        alt=""
+                        onClick={() => setActiveImageIndex(idx)}
+                        style={{
+                          width: 48, height: 48, objectFit: 'cover', borderRadius: 6, cursor: 'pointer', flexShrink: 0,
+                          border: idx === activeImageIndex ? '2px solid var(--basket-brown)' : '2px solid transparent',
+                          opacity: idx === activeImageIndex ? 1 : 0.7
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           <h3 className="serif">{activeProduct.title}</h3>
@@ -565,27 +609,54 @@ function CustomOrderSection({ onClose }: { onClose: () => void }) {
       </div>
     </div>
   );
-}function AboutSection() {
+}
+function AboutSection() {
   return (
-    <section id="about" style={{ maxWidth: 800, margin: '0 auto', padding: '56px 24px', textAlign: 'center' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--basket-brown)' }}>
-        About Us
+    <section id="about" style={{ padding: '64px 24px', background: 'linear-gradient(180deg, var(--sky-1) 0%, var(--cream) 60%)' }}>
+      <div style={{ maxWidth: 680, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 36, marginBottom: 6 }}>🧺</div>
+        <h2 className="script" style={{ fontSize: 40, color: 'var(--navy)', margin: '0 0 6px' }}>Welcome to Template Tokri</h2>
+        <p className="serif" style={{ fontStyle: 'italic', color: 'var(--muted)', fontSize: 16, margin: '0 0 26px' }}>
+          Where every big dream begins with an unforgettable first impression.
+        </p>
+
+        <p style={{ color: 'var(--ink)', fontSize: 15, lineHeight: 1.8, textAlign: 'left', margin: '0 0 14px' }}>
+          A tokri has always held the things closest to our hearts — sweets for celebration, blooms for a blessing, and the love of family. Template Tokri is our basket of beginnings.
+        </p>
+        <p style={{ color: 'var(--ink)', fontSize: 15, lineHeight: 1.8, textAlign: 'left', margin: '0 0 30px' }}>
+          Whether you're stepping into a lifetime of love or launching a dream business, we believe your story deserves to be announced with soul. An invitation or brand design isn't just paper or pixels — it's an emotion, a promise, and the standard-setter for everything that follows.
+        </p>
+
+        <h3 className="serif" style={{ fontSize: 22, color: 'var(--navy)', margin: '0 0 20px' }}>What we craft with love</h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, marginBottom: 26 }}>
+          <div style={{ background: 'var(--blush)', borderRadius: 14, padding: '20px 22px', textAlign: 'left' }}>
+            <div style={{ fontSize: 26 }}>🌸</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#712B13', marginTop: 10 }}>Dream celebrations</div>
+            <div style={{ fontSize: 13, color: '#8a4f38', marginTop: 4, lineHeight: 1.6 }}>
+              Artful, soulful invitations for weddings and milestones that stir excitement long before the day arrives.
+            </div>
+          </div>
+          <div style={{ background: 'var(--gold)', borderRadius: 14, padding: '20px 22px', textAlign: 'left' }}>
+            <div style={{ fontSize: 26 }}>💼</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#412402', marginTop: 10 }}>Bespoke business branding</div>
+            <div style={{ fontSize: 13, color: '#5c4a00', marginTop: 4, lineHeight: 1.6 }}>
+              Distinctive, polished designs that give modern ventures instant credibility and charm.
+            </div>
+          </div>
+        </div>
+
+        <p className="serif" style={{ fontStyle: 'italic', color: 'var(--muted)', fontSize: 15, margin: '0 0 28px' }}>
+          Handcrafted luxury, made thoughtful and accessible.
+        </p>
+
+        <div>
+          <div style={{ fontSize: 20, marginBottom: 4 }}>🤍</div>
+          <p className="script" style={{ fontSize: 26, color: 'var(--navy)', margin: 0, lineHeight: 1.2 }}>
+            With love and gratitude,<br />Shruti, Founder
+          </p>
+        </div>
       </div>
-      <h2 className="serif" style={{ margin: '6px 0 20px', fontSize: 30 }}>Why Template Tokri exists</h2>
-      <p style={{ color: 'var(--muted)', fontSize: 15.5, lineHeight: 1.75, textAlign: 'left' }}>
-        Template Tokri started with a simple frustration: generic design templates never quite fit how Bengal,
-        Bihar, and Jharkhand actually celebrate. A Durga Puja invite needs to feel like Durga Puja — not a
-        repainted Western wedding template. A Mithila wedding card should carry real Mithila motifs, not a
-        generic floral border.
-      </p>
-      <p style={{ color: 'var(--muted)', fontSize: 15.5, lineHeight: 1.75, textAlign: 'left', marginTop: 14 }}>
-        So we built a "tokri" — a basket — of templates made specifically for this region: Bengali, Hindi,
-        Bhojpuri, and Maithili, across weddings, festivals, and small businesses. Pick a quick-edit template
-        and get it personalised in 24–48 hours, or work with our team on something fully custom for your big day.
-      </p>
-      <p className="script" style={{ color: 'var(--navy)', fontSize: 24, marginTop: 20 }}>
-        Real regional design, made simple.
-      </p>
     </section>
   );
 }
