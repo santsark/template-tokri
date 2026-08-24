@@ -41,6 +41,7 @@ export default function HomePage() {
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [placingOrder, setPlacingOrder] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
   const [customOrderOpen, setCustomOrderOpen] = useState(false);
 
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function HomePage() {
           // not this client callback — this just gives the user feedback.
           setCart([]);
           setCheckoutOpen(false);
-          alert('Payment received — your order is confirmed! You\'ll get a confirmation email, and your edited files within 24–48 hours.');
+          setOrderSuccessOpen(true);
         }
       });
       rzp.open();
@@ -370,6 +371,24 @@ export default function HomePage() {
           >
             ✕
           </button>
+        </div>
+      )}
+      {/* Order success modal */}
+      {orderSuccessOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 260, padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 16, maxWidth: 420, width: '100%', padding: 32, textAlign: 'center' }}>
+            <div style={{ fontSize: 44, marginBottom: 8 }}>🧺</div>
+            <h3 className="serif" style={{ margin: '0 0 10px' }}>Payment received!</h3>
+            <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.6 }}>
+              Your order is confirmed. You'll get a confirmation email, and your edited files within 24–48 hours.
+            </p>
+            <button
+              onClick={() => setOrderSuccessOpen(false)}
+              style={{ marginTop: 18, background: 'var(--basket-brown)', color: '#fff', border: 'none', borderRadius: 999, padding: '11px 28px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Done
+            </button>
+          </div>
         </div>
       )}
       
