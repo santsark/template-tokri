@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { razorpay } from '@/lib/razorpay';
+import { createOrder } from '@/lib/razorpay';
 
 // Expected body:
 // {
@@ -47,11 +47,7 @@ export async function POST(request: Request) {
     }
   });
 
-  const razorpayOrder = await razorpay.orders.create({
-    amount: totalAmount * 100, // Razorpay expects paise
-    currency: 'INR',
-    receipt: order.id
-  });
+  const razorpayOrder = await createOrder(totalAmount, order.id);
 
   await prisma.order.update({
     where: { id: order.id },
