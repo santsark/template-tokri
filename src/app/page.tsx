@@ -167,9 +167,9 @@ export default function HomePage() {
   <h1 className="script" style={{ fontSize: 'clamp(40px, 7vw, 68px)', color: 'var(--navy)', margin: '0 0 10px', lineHeight: 1.05 }}>
     Your basket of designs
   </h1>
-  <p style={{ maxWidth: 560, margin: '0 auto 14px', color: 'var(--muted)', fontSize: 16, lineHeight: 1.6 }}>
-    Wedding cards, festive invites, milestone celebrations, and business templates — made for Indian households, 
-    in languages that speak like you.
+  <p style={{ maxWidth: 640, margin: '0 auto 14px', color: 'var(--muted)', fontSize: 16, lineHeight: 1.6 }}>
+    Wedding cards, festive invites, milestone celebrations, and business templates —<br />
+    made for Indian households, in languages that feel like you.
   </p>
   <p style={{ maxWidth: 560, margin: '0 auto 26px', color: 'var(--muted)', fontSize: 13.5 }}>
     🧺 Quick-edit designs delivered in 24–48 hours &nbsp;·&nbsp; ✨ Fully custom designs crafted just for you
