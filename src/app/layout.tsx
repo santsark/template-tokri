@@ -4,7 +4,7 @@ import '@/styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'Template Tokri — Regional Design Templates',
-  description: 'Wedding, Puja, festival and business design templates for Bengal, Bihar and Jharkhand.',
+  description: 'Wedding, festive, and business design templates made for Indian households, in languages that speaks like you.',
   icons: { icon: '/logo.png' }
 };
 

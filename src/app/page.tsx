@@ -165,14 +165,14 @@ export default function HomePage() {
   textAlign: 'center'
 }}>
   <h1 className="script" style={{ fontSize: 'clamp(40px, 7vw, 68px)', color: 'var(--navy)', margin: '0 0 10px', lineHeight: 1.05 }}>
-    Your basket of regional design
+    Your basket of designs
   </h1>
   <p style={{ maxWidth: 560, margin: '0 auto 14px', color: 'var(--muted)', fontSize: 16, lineHeight: 1.6 }}>
-    Wedding cards, Puja invites, festival kits and business templates — made for Bengal, Bihar and Jharkhand,
-    in the languages your community actually speaks.
+    Wedding cards, festive invites, milestone celebrations, and business templates — made for Indian households, 
+    in languages that speak like you.
   </p>
   <p style={{ maxWidth: 560, margin: '0 auto 26px', color: 'var(--muted)', fontSize: 13.5 }}>
-    🧺 Quick-edit templates delivered in 24–48 hours &nbsp;·&nbsp; ✨ Fully custom designs for your big day
+    🧺 Quick-edit designs delivered in 24–48 hours &nbsp;·&nbsp; ✨ Fully custom designs crafted just for you
   </p>
   <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
     {categoryList.slice(0, 3).map((cat) => (
@@ -467,7 +467,7 @@ export default function HomePage() {
 
       <footer style={{ background: 'var(--navy)', color: 'var(--sky-1)', marginTop: 60, padding: '40px 24px', textAlign: 'center' }}>
         <div className="script" style={{ fontSize: 26, color: '#fff' }}>Template Tokri</div>
-        <p style={{ fontSize: 13, marginTop: 8 }}>Kolkata, West Bengal · hello@templatetokri.com</p>
+        <p style={{ fontSize: 13, marginTop: 8 }}>Kolkata, West Bengal · hello@templatetokri.in</p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginTop: 14, fontSize: 12.5 }}>
           <a href="/terms-of-use" style={{ color: 'var(--sky-1)' }}>Terms of Use</a>
           <a href="/privacy-policy" style={{ color: 'var(--sky-1)' }}>Privacy Policy</a>
@@ -584,7 +584,7 @@ function CustomOrderSection({ onClose }: { onClose: () => void }) {
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Preferred language</label>
               <select style={inputStyle} value={form.preferredLanguage} onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}>
-                <option>English</option><option>Bengali</option><option>Hindi</option><option>Bhojpuri</option><option>Maithili</option>
+                <option>English</option><option>Hindi</option><option>Bengali</option>
               </select>
             </div>
 
@@ -694,7 +694,7 @@ function FAQSection() {
     },
     {
       q: 'What languages do you support?',
-      a: 'Bengali, Hindi, Bhojpuri, and Maithili, plus English.'
+      a: 'We design in multiple Indian languages so your invitation feels personal and familiar — let us know your preference when you order.'
     },
     {
       q: 'Is paying by UPI safe?',
@@ -713,8 +713,8 @@ function FAQSection() {
       a: 'Contact us — quick-edit templates include light corrections, and custom orders include revision rounds agreed upfront.'
     },
     {
-      q: 'Do you only serve Bengal, Bihar, and Jharkhand?',
-      a: "That's our specialty and design focus, but anyone, anywhere, can order from us."
+      q: 'Do you deliver anywhere in India?',
+      a: "Yes — we design for Indian households everywhere. Anyone, anywhere, can order from us."
     }
   ];
 
