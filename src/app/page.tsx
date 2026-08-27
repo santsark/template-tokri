@@ -715,6 +715,10 @@ function FAQSection() {
     {
       q: 'Do you deliver anywhere in India?',
       a: "Yes — we design for Indian households everywhere. Anyone, anywhere, can order from us."
+    },
+    {
+      q: 'Will the logo and watermark be on the card I receive?',
+      a: 'No — the watermark on preview images is just for protection. Your final delivered file will be clean and completely free of any watermark or logo.'
     }
   ];
 
