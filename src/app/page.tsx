@@ -26,6 +26,10 @@ declare global {
     Razorpay: any;
   }
 }
+
+// TEMPORARY — flip to false once Razorpay live API keys are verified.
+const MANUAL_PAYMENT_MODE = true;
+
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categoryList, setCategoryList] = useState<{ id: string; name: string }[]>([]);
@@ -89,6 +93,30 @@ export default function HomePage() {
   async function handlePayment() {
     if (!customerInfo.name || !customerInfo.phone || cart.length === 0) return;
     setPlacingOrder(true);
+
+    if (MANUAL_PAYMENT_MODE) {
+      try {
+        await fetch('/api/manual-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerName: customerInfo.name,
+            customerPhone: customerInfo.phone,
+            customerEmail: customerInfo.email,
+            items: cart
+          })
+        });
+        setCart([]);
+        setCheckoutOpen(false);
+        setOrderSuccessOpen(true);
+      } catch (err) {
+        alert('Something went wrong placing your order. Please try again.');
+      } finally {
+        setPlacingOrder(false);
+      }
+      return;
+    }
+
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -380,7 +408,9 @@ export default function HomePage() {
             <div style={{ fontSize: 44, marginBottom: 8 }}>🧺</div>
             <h3 className="serif" style={{ margin: '0 0 10px' }}>Payment received!</h3>
             <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.6 }}>
-              Your order is confirmed. You'll get a confirmation email, and your edited files within 24–48 hours.
+              {MANUAL_PAYMENT_MODE
+                ? "We've received your order! We'll send you a secure payment link via WhatsApp or email shortly to complete your purchase."
+                : "Your order is confirmed. You'll get a confirmation email, and your edited files within 24–48 hours."}
             </p>
             <button
               onClick={() => setOrderSuccessOpen(false)}
@@ -455,7 +485,7 @@ export default function HomePage() {
                 onClick={handlePayment}
                 style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: agreedToTerms ? 'var(--navy)' : '#ccc', color: '#fff', fontWeight: 700, cursor: agreedToTerms ? 'pointer' : 'not-allowed' }}
               >
-                {placingOrder ? 'Please wait...' : 'Pay via UPI'}
+                {placingOrder ? 'Please wait...' : MANUAL_PAYMENT_MODE ? 'Place Order' : 'Pay via UPI'}
               </button>
             </div>
           </div>
