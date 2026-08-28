@@ -20,11 +20,8 @@ export default function TermsOfUsePage() {
       <h2>Limitation of liability</h2>
       <p>Our total liability for any order-related claim is limited to the amount paid for that order. This doesn't limit any liability that can't be excluded under Indian law.</p>
 
-      <h2>Governing law</h2>
-      <p>These Terms are governed by the laws of India. Disputes are subject to the exclusive jurisdiction of the courts in [FILL IN — jurisdiction city].</p>
-
       <h2>Contact us</h2>
-      <p>For questions about these Terms: [FILL IN email/phone]</p>
+      <p>For questions about these Terms: hello@templatetokri.in</p>
     </PolicyPage>
   );
 }

@@ -15,16 +15,13 @@ export default function PrivacyPolicyPage() {
       <p>Razorpay (payments), Brevo (order/notification emails), and Vercel/Neon (secure hosting and database). We never sell your data.</p>
 
       <h2>Your rights</h2>
-      <p>Under the DPDP Act, you can request access, correction, or deletion of your data, and withdraw consent at any time. Contact our Grievance Officer below — we aim to resolve requests within 7 days.</p>
-
-      <h2>Grievance Officer</h2>
-      <p>Name: [FILL IN]<br/>Email: [FILL IN]<br/>Postal address: [FILL IN]</p>
+      <p>Under the DPDP Act, you can request access, correction, or deletion of your data, and withdraw consent at any time. Contact us using the details below — we aim to resolve requests within 7 days.</p>
 
       <h2>International visitors</h2>
       <p>While anyone can order from Template Tokri, our business and data processing are based in India, and this policy is governed by Indian law.</p>
 
       <h2>Contact us</h2>
-      <p>For privacy questions: [FILL IN email/phone]</p>
+      <p>For privacy questions: hello@templatetokri.in</p>
     </PolicyPage>
   );
 }
