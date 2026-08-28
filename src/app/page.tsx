@@ -28,7 +28,7 @@ declare global {
 }
 
 // TEMPORARY — flip to false once Razorpay live API keys are verified.
-const MANUAL_PAYMENT_MODE = true;
+const MANUAL_PAYMENT_MODE = false;
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
