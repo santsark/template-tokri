@@ -406,7 +406,7 @@ export default function HomePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,43,60,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 260, padding: 20 }}>
           <div style={{ background: '#fff', borderRadius: 16, maxWidth: 420, width: '100%', padding: 32, textAlign: 'center' }}>
             <div style={{ fontSize: 44, marginBottom: 8 }}>🧺</div>
-            <h3 className="serif" style={{ margin: '0 0 10px' }}>Payment received!</h3>
+            <h3 className="serif" style={{ margin: '0 0 10px' }}>{MANUAL_PAYMENT_MODE ? 'Order received!' : 'Payment received!'}</h3>
             <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.6 }}>
               {MANUAL_PAYMENT_MODE
                 ? "We've received your order! We'll send you a secure payment link via WhatsApp or email shortly to complete your purchase."
